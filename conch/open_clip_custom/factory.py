@@ -79,6 +79,7 @@ def create_model(
 def create_model_from_pretrained(
         model_cfg: Union[str, Dict],
         checkpoint_path: Optional[str] = None,
+        # checkpoint_path: Optional[str] = 'checkpoints\\conch\\pytorch_model.bin', # changed checkpoint path
         device: Union[str, torch.device] = 'cpu',
         jit: bool = False,
         force_image_size: Optional[Union[int, Tuple[int, int]]] = None,
