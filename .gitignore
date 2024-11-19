@@ -10,6 +10,13 @@ tests/data/
 *mgb*
 DEBUG*
 
+# data features
+.png
+*.png
+*.csv
+*.pkl
+*.pickle
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
