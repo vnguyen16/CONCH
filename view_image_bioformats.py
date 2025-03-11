@@ -229,7 +229,7 @@ def main():
     print(f"Loaded WSI with shape: {image.shape}")
 
     # Extract relevant patches
-    patches = extract_patches(
+    patches = extract_patches( 
         image,
         patch_size=PATCH_SIZE,
         stride=STRIDE,
