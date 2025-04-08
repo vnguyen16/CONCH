@@ -135,6 +135,29 @@ def overlay_annotation(image, coords):
     # plt.legend()
     plt.show()
 
+# adding function to calculate polygon centroid and adjust offset
+def polygon_centroid(coords):
+    """
+    Compute the accurate centroid of a 2D polygon using the area-weighted formula.
+    Assumes the polygon is closed (first and last points are not the same).
+    """
+    coords = np.array(coords)
+    x = coords[:, 0]
+    y = coords[:, 1]
+
+    # Shift the points so (x[n+1], y[n+1]) = (x[0], y[0])
+    x = np.append(x, x[0])
+    y = np.append(y, y[0])
+
+    a = x[:-1] * y[1:] - x[1:] * y[:-1]
+    area = 0.5 * np.sum(a)
+
+    Cx = (1 / (6 * area)) * np.sum((x[:-1] + x[1:]) * a)
+    Cy = (1 / (6 * area)) * np.sum((y[:-1] + y[1:]) * a)
+
+    return Cx, Cy
+
+
 def adjust_annotation_offset(image, coords):
     """
     Adjust annotation coordinates to properly align with the WSI image.
@@ -146,7 +169,10 @@ def adjust_annotation_offset(image, coords):
     
     # Calculate the difference in center position (centroid)
     image_center = (image_width / 2, image_height / 2)
-    annotation_center = (sum(x for x, _ in coords) / len(coords), sum(y for _, y in coords) / len(coords))
+    # annotation_center = (sum(x for x, _ in coords) / len(coords), sum(y for _, y in coords) / len(coords))
+
+    # using the polygon centroid function***
+    annotation_center = annotation_center = polygon_centroid(coords)
 
     # Calculate offset
     offset_x = image_center[0] - annotation_center[0]

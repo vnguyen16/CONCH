@@ -110,17 +110,19 @@ model = UNIModelForFinetuning(num_classes=2).to(device) # UNI model
 # Load fine-tuned checkpoint
 # fine_tuned_checkpoint = r'C:\Users\Vivian\Documents\CONCH\_finetune_weights_CONCH\patient_split_70.pth' # conch checkpoint
 # fine_tuned_checkpoint = r'C:\Users\Vivian\Documents\CONCH\_finetune_weights_UNI\patient_split_70.pth' # fully finetuned
-fine_tuned_checkpoint = r'C:\Users\Vivian\Documents\CONCH\_finetune_weights_UNI\patient_split_70_linprob.pth' # linear probe
+# fine_tuned_checkpoint = r'C:\Users\Vivian\Documents\CONCH\_finetune_weights_UNI\patient_split_70_linprob.pth' # linear probe
+fine_tuned_checkpoint = r'C:\Users\Vivian\Documents\CONCH\_finetune_weights_UNI\all_slides_90_10.pth'
 model.load_state_dict(torch.load(fine_tuned_checkpoint, map_location=device), strict=False)
 model.eval()
 
 # Load test data
-test_dataset = HistopathologyDataset(r"C:\Users\Vivian\Documents\CONCH\metadata\fine_tuning\test_ann_series8.csv")
+# test_dataset = HistopathologyDataset(r"C:\Users\Vivian\Documents\CONCH\metadata\fine_tuning\test_ann_series8.csv")
+test_dataset = HistopathologyDataset(r'C:\Users\Vivian\Documents\CONCH\metadata\patient_split_annotate\patch_csv\test_patches.csv')
 test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False)
 
-# Output directory for slide-wise predictions
-output_dir = r"C:\Users\Vivian\Documents\CONCH\patch_predictions\by_slide"
-os.makedirs(output_dir, exist_ok=True)
+# # Output directory for slide-wise predictions
+# output_dir = r"C:\Users\Vivian\Documents\CONCH\patch_predictions\by_slide"
+# os.makedirs(output_dir, exist_ok=True)
 
 # Evaluation loop
 criterion = nn.CrossEntropyLoss()
@@ -163,7 +165,7 @@ print(f"Recall        : {recall:.4f}")
 print(f"F1 Score      : {f1:.4f}")
 
 # # Save predictions to CSV
-csv_save_path = r"C:\Users\Vivian\Documents\CONCH\patch_predictions\UNI_linprob_test_ann_only.csv"
+csv_save_path = r"C:\Users\Vivian\Documents\CONCH\patch_predictions\UNI90_test_ann_only.csv"
 df = pd.DataFrame(predictions_list, columns=["Patch Path", "Predicted", "True Label"])
 df.to_csv(csv_save_path, index=False)
 print(f"\nSaved predictions to {csv_save_path}")

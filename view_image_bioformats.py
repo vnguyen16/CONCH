@@ -73,7 +73,7 @@ def extract_patches(image, patch_size=224, stride=224, white_threshold=0.8, bord
             patch = image[y:y + patch_size, x:x + patch_size, :]
 
             # Second approach 
-            temp = compute_statistics2(patch, 10) # determine if pixel is colour or not # og 40
+            temp = compute_statistics2(patch, 5) # determine if pixel is colour or not # og 40
             if temp.sum() > patch_size * patch_size * 0.3: # og 0.4 # count number of colour pixels, see percentage of patch that is colour or white
                 patches.append({"patch": patch, "coordinates": (x, y)})
 
@@ -206,12 +206,13 @@ def main():
     # vsi_file = "Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 47 B1.vsi" # 40x mag - use series 9?
     # vsi_file = "Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 57B.vsi" # 20x mag - use series 7?
     # vsi_file = "Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 60 B.vsi"
-    vsi_file = "z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans\PT 74 B2.vsi" # 40x
+    # vsi_file = "Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 60 B.vsi" 
+    vsi_file = "Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 62 B.vsi" # testing out slides not succesfully processed (mostly 20x - series 8)
 
     # image = bioformats.load_image(vsi_file)
     # metadata = bioformats.get_omexml_metadata(vsi_file)
 
-    image = bioformats.load_image(vsi_file, series=9, rescale=False) # Highest resolution that could be loaded = 7 (FA 57B (20701, 28980, 3) - 2nd highest size)
+    image = bioformats.load_image(vsi_file, series=8, rescale=False) # Highest resolution that could be loaded = 7 (FA 57B (20701, 28980, 3) - 2nd highest size)
 
     # Convert to NumPy array
     image_np = np.array(image)
@@ -222,7 +223,7 @@ def main():
     # --------------------------------------------- 
 
     # Main Workflow
-    output_dir = r"C:\Users\Vivian\Documents\CONCH\patches_png\PT74_B2_level9"
+    output_dir = r"C:\Users\Vivian\Documents\CONCH\patches_annotated\20x\FA\FA 62 B"
 
     # Use the numpy array created with the bioformats library
     image = image_np
@@ -245,9 +246,11 @@ def main():
     # save_patches(patches, output_dir)
     # print(f"Patches saved to {output_dir}")
 
-    # # Saving patches as NumPy arrays
-    # save_patches_as_numpy(patches, output_dir)
-    # print(f"Patches and mapping saved to {output_dir}")
+    # Saving patches as NumPy arrays
+    save_patches_as_numpy(patches, output_dir)
+    print(f"Patches and mapping saved to {output_dir}")
+
+# ----------------------------------------------
 
 if __name__ == "__main__":
     main()
