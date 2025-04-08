@@ -1,6 +1,7 @@
 checkpoints/
 dataset_csvs/
 # src/*.sh
+CISC882_scripts/
 
 tests/data/
 *.pt
