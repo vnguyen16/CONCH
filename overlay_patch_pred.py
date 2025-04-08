@@ -186,6 +186,7 @@ from matplotlib.patches import Rectangle
 #         ax.add_patch(rect)
 
 #     plt.show()
+#  --------------------------------------------------
 
 def reconstruct_image_with_predictions(slide_folder, patch_map_csv, predictions_df, patch_size=(224, 224)):
     """
