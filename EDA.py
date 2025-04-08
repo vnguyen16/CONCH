@@ -1,5 +1,5 @@
 """
-This script contains functions to:
+This script contains programs to:
     1. Extracts metadata from vsi files 
     2. Filters out slides based on sample type (A, B, C) and saves them in a new folder.
     3. Reads the metadata and creates plots to display the statistics. Places FA and PT on x-axis.
