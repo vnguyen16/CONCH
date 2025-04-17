@@ -3,12 +3,15 @@ This script contains programs to:
     1. Visualize patches from a folder + reconstruct the original image from patches.
     2. Reconstruct an image from patches and overlay predictions.
     3. Compute slide-level accuracy from patch-level predictions.
+    4. Show zoomed-in views of random patches on the reconstructed image.
 """
 
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import random
+import matplotlib.patches as mpatches # for 4th program
 
 from matplotlib.patches import Rectangle
 
@@ -45,9 +48,17 @@ def visualize_patches(patch_folder, csv_path, num_patches=16):
     plt.tight_layout()
     plt.show()
 
-def reconstruct_image_from_patches(patch_folder, csv_path, patch_size=(224, 224)):
+def reconstruct_image(patch_folder, csv_path, patch_size=(224, 224)):
     """
     Reconstruct the original image from patches using their coordinates.
+
+        Args:
+        patch_folder (str): Path to folder containing .npy patch files.
+        csv_path (str): Path to CSV file with columns: patch_file, x, y
+        patch_size (tuple): Width and height of each patch.
+    
+    Returns:
+        np.ndarray: Reconstructed image.
     """
     df = pd.read_csv(csv_path)
 
@@ -65,8 +76,11 @@ def reconstruct_image_from_patches(patch_folder, csv_path, patch_size=(224, 224)
     plt.figure(figsize=(10, 10))
     plt.imshow(reconstructed_image)
     plt.axis('off')
-    plt.title('Reconstructed Image', fontsize=16)
+    # plt.title('Reconstructed Image', fontsize=16)
+    plt.tight_layout
     plt.show()
+
+    return reconstructed_image
 
 # ---------------------------------------------
 # 2. Reconstruct image with predictions overlaid
@@ -225,34 +239,112 @@ def compute_slide_accuracy(csv_path, output_csv_path=None, save_csv=True):
 
     return accuracy_per_slide
 
+# -----------------------------------------------
+# 4. Show zoomed-in views of random patches
+# -----------------------------------------------
+
+def reconstruct_image_from_patches(patch_folder, csv_path, patch_size=(224, 224)):
+    """
+    Reconstruct the original image from patches using their coordinates.
+    """
+    df = pd.read_csv(csv_path)
+
+    max_x = df['x'].max() + patch_size[0]
+    max_y = df['y'].max() + patch_size[1]
+
+    reconstructed_image = np.zeros((max_y, max_x, 3), dtype=np.uint8)
+
+    for _, row in df.iterrows():
+        patch_file, x, y = row['patch_file'], row['x'], row['y']
+        patch = np.load(os.path.join(patch_folder, patch_file))
+        reconstructed_image[y:y + patch_size[1], x:x + patch_size[0], :] = patch
+
+    return reconstructed_image, df  # <-- return DataFrame for later sampling
+
+def select_random_patches(df, n=3):
+    return df.sample(n)
+
+def show_selected_patch_overlay(image, selected_df, patch_size=(224, 224), box_color="green"):
+    fig, ax = plt.subplots(figsize=(12, 12))
+    ax.imshow(image)
+
+    for _, row in selected_df.iterrows():
+        x, y = row['x'], row['y']
+        rect = mpatches.Rectangle(
+            (x, y),
+            patch_size[0],
+            patch_size[1],
+            linewidth=2,
+            edgecolor=box_color,
+            facecolor='none'
+        )
+        ax.add_patch(rect)
+
+    ax.axis('off')
+    plt.tight_layout()
+    plt.show()
+
+
+def show_selected_patches_only(patch_folder, selected_df):
+    """
+    Display selected patches side-by-side.
+    """
+    fig, axes = plt.subplots(1, len(selected_df), figsize=(4 * len(selected_df), 4))
+    
+    if len(selected_df) == 1:
+        axes = [axes]  # Ensure it's iterable
+
+    for ax, (_, row) in zip(axes, selected_df.iterrows()):
+        patch_file = row['patch_file']
+        patch_path = os.path.join(patch_folder, patch_file)
+        patch = np.load(patch_path)
+
+        ax.imshow(patch)
+        ax.set_title(f"{patch_file}\n({row['x']}, {row['y']})", fontsize=10)
+        ax.axis("off")
+
+    plt.tight_layout()
+    plt.show()
+
+
 
 def main():
     # --------------- 1. visualize/reconstruct patches ---------------------
     # patch_folder = "C:\\Users\\Vivian\\Documents\\FA47_B1_level9_numpy"
     # patch_folder = r"C:\Users\Vivian\Documents\CONCH\patches\20x\FA\FA 88 B"
-    patch_folder = r'C:\Users\Vivian\Documents\CONCH\patches_annotated\20x\FA\FA 62 B'
+    patch_folder = r'C:\Users\Vivian\Documents\CONCH\patches\20x\FA\FA 57B'
     csv_path = os.path.join(patch_folder, "patch_map.csv")
 
     visualize_patches(patch_folder, csv_path, num_patches=16)
-    reconstruct_image_from_patches(patch_folder, csv_path)
+    reconstruct_image(patch_folder, csv_path)
 
     # ------------- 2. reconstruct image with predictions overlaid ---------------------
-    # root_folder = r"C:\Users\Vivian\Documents\CONCH\patches"
-    # # predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\patient_split_UNI70_linprob.csv'
-    # # predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\UNI_linprob_ann_test.csv'
-    # # predictions_csv = r"C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\CONCH_linprob_ann_test.csv"
-    # predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\UNI90_test_ann_only.csv'
-
+    # root_folder = r"C:\Users\Vivian\Documents\CONCH\patches_annotated"
+    # # # predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\patient_split_UNI70_linprob.csv'
+    # # # predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\UNI_linprob_ann_test.csv'
+    # # # predictions_csv = r"C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\CONCH_linprob_ann_test.csv"
+    # # predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\UNI_linprob_ann_cleanlearning_test.csv'
+    # predictions_csv = r"C:\Users\Vivian\Documents\CONCH\patch_predictions/annotated/UNI_linprob_ann_issue-patches_test.csv"
     # process_selected_slides(root_folder, predictions_csv)
 
     # ---------------- 3. compute slide accuracy ---------------------
-    # csv_path = r"C:\Users\Vivian\Documents\CONCH\patch_predictions\patient_split_CONCH70.csv"
+    # csv_path = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\UNI_linprob_ann_cleanlearning_test.csv'
     # output_path = r"C:\Users\Vivian\Documents\CONCH\slide_acc\conch70_patient.csv"
 
-    # acc_df = compute_slide_accuracy(csv_path, output_path, save_csv=True)
-    # # acc_df = compute_slide_accuracy(csv_path, save_csv=False) # Just to display without saving
+    # # acc_df = compute_slide_accuracy(csv_path, output_path, save_csv=True)
+    # acc_df = compute_slide_accuracy(csv_path, save_csv=False) # Just to display without saving
 
     # print(acc_df.sort_values(by='Accuracy (%)', ascending=False))
+
+    # ---------------- 4. show zoomed-in views of random patches ---------------------
+    # run with function 1
+    # patch_folder = r'C:\Users\Vivian\Documents\CONCH\patches\20x\FA\FA 57B'
+    # csv_path = os.path.join(patch_folder, "patch_map.csv")
+
+    # reconstructed_image, df = reconstruct_image_from_patches(patch_folder, csv_path)     # Step 1: Reconstruct full slide and get metadata
+    # selected_patches = select_random_patches(df, n=3)       # Step 2: Randomly select 3 patches
+    # show_selected_patch_overlay(reconstructed_image, selected_patches)      # Step 3: Show selected patches on the reconstructed image
+    # show_selected_patches_only(patch_folder, selected_patches)     # Step 4: Show selected patches individually
 
 
 if __name__ == "__main__":
