@@ -80,7 +80,18 @@ class HistopathologyDataset(Dataset):
 class UNIModelForFinetuning(nn.Module):
     def __init__(self, num_classes=2):
         super().__init__()
+        # self.model = self.make_uni()
+        # self.fc = nn.Linear(1024, num_classes)
+
         self.model = self.make_uni()
+        # self.fc = nn.Linear(self.config['hidden_size'], num_classes) # keep commented
+        # self.fc = nn.Linear(1024, num_classes)  # Match Vision Transformer output # full finetuning
+
+        #***** Freeze all backbone parameters - linear probing *****
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        # Add a trainable classification head
         self.fc = nn.Linear(1024, num_classes)
 
     def make_uni(self):
@@ -165,7 +176,7 @@ print(f"Recall        : {recall:.4f}")
 print(f"F1 Score      : {f1:.4f}")
 
 # # Save predictions to CSV
-csv_save_path = r"C:\Users\Vivian\Documents\CONCH\patch_predictions\UNI90_test_ann_only.csv"
+csv_save_path = r"C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\UNI_zeroshot_ann.csv"
 df = pd.DataFrame(predictions_list, columns=["Patch Path", "Predicted", "True Label"])
 df.to_csv(csv_save_path, index=False)
 print(f"\nSaved predictions to {csv_save_path}")

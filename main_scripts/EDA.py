@@ -218,15 +218,39 @@ def generate_plots(df1, df2, lesion_class1, lesion_class2):
                            "Distribution of Max Magnification Factors", lesion_class1, lesion_class2, magnification_colors)
 
 # ------------------------------------------------------------------------------
+# 4. Display images from .npy files
+# ------------------------------------------------------------------------------
 
+def display_numpy_image(npy_path):
+    """
+    Loads a NumPy array from a .npy file and displays it as an image.
+    
+    Args:
+        npy_path (str): Path to the .npy file.
+    """
+    # Load the array
+    image = np.load(npy_path)
+
+    # Check shape and convert grayscale to RGB if needed
+    if image.ndim == 2:  # Grayscale
+        image = np.stack([image] * 3, axis=-1)
+    
+    # Plot
+    plt.figure(figsize=(4, 4))
+    plt.imshow(image)
+    plt.tight_layout()
+    plt.axis('off')
+    plt.show()
+
+# -------------------------------------------------------------
 
 def main():
     # ---- extracting metadata from vsi files ----
-    bftools_path = r"C:\Users\Vivian\Downloads\bftools\bftools\showinf.bat"
-    vsi_folder = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans"
-    output_csv = "vsi_PT_metadata.csv"
+    # bftools_path = r"C:\Users\Vivian\Downloads\bftools\bftools\showinf.bat"
+    # vsi_folder = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans"
+    # output_csv = "vsi_PT_metadata.csv"
 
-    extract_metadata_from_folder(bftools_path, vsi_folder, output_csv)
+    # extract_metadata_from_folder(bftools_path, vsi_folder, output_csv)
 
 
     # ---- creating plots ----
@@ -252,6 +276,9 @@ def main():
     # sample_type = "B"  # Change this to "A" or "C" as needed
     # filter_and_save_samples_by_type(csv_files, sample_type)
 
+    # --------display patches from numpy files--------
+    npy_path = r"C:\Users\Vivian\Documents\CONCH\patches\20x\FA\FA 57B\patch_1406_x4480_y5152.npy"
+    display_numpy_image(npy_path)
 
 
 if __name__ == "__main__":
