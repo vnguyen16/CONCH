@@ -1,5 +1,3 @@
-
-# -------------------------------------------------
 import xml.etree.ElementTree as ET
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,6 +8,8 @@ import os
 from tqdm import tqdm
 import bioformats
 from bioformats import load_image
+import pandas as pd
+import cv2
 
 def load_vsi_image(vsi_path, series=0):
     javabridge.start_vm(class_path=bioformats.JARS)
@@ -55,33 +55,7 @@ def load_slide_in_tiles(vsi_path, tile_size=1024, series=8):
     javabridge.kill_vm()
     return full_image
 
-
-
-def parse_all_annotations(annotation_path, scale_factor=1.0):
-    # to visualize og annotations without offset
-    tree = ET.parse(annotation_path)
-    root = tree.getroot()
-
-    all_annotations = []
-
-    for annot in root.findall("Annotation"):
-        name = annot.attrib.get("Name", "Unnamed")
-        regions = annot.find("Regions")
-        if regions is None:
-            continue
-        for region in regions.findall("Region"):
-            polygon = []
-            for v in region.findall(".//Vertices/V"):
-                x = float(v.get("X")) / scale_factor
-                y = float(v.get("Y")) / scale_factor
-                polygon.append((x, y))
-            all_annotations.append({
-                "name": name,
-                "polygon": polygon
-            })
-    return all_annotations
-
-def parse_all_annotations2(annotation_path):
+def parse_all_annotations(annotation_path):
     # without scaling down
     tree = ET.parse(annotation_path)
     root = tree.getroot()
@@ -108,10 +82,6 @@ def parse_all_annotations2(annotation_path):
 def visualize_annotations(image, annotations):
     fig, ax = plt.subplots(figsize=(15, 15))
     ax.imshow(image)
-    # ax.imshow(image, extent=(x_offset, x_offset + image.shape[1],
-    #                      y_offset + image.shape[0], y_offset),
-    #       origin='upper')
-
 
     # Assign each annotation a unique color
     color_map = {}
@@ -157,23 +127,89 @@ def apply_offset_to_annotations(annotations, offset_x_um, offset_y_um, pixel_siz
             y_um = y * pixel_size_y
             x_new = (x_um + offset_x_um) / (pixel_size_x*downsample_factor) # apply offset, convert back to pixels, and downsample
             y_new = (y_um + offset_y_um) / (pixel_size_y*downsample_factor)
-            # x_new = (x_um - 10000) / (pixel_size_x * downsample_factor) # apply offset, convert back to pixels, and downsample
-            # y_new = (y_um - 10000) / (pixel_size_y * downsample_factor)
             print(f"Shifted (Series N pixels): ({x_new:.2f}, {y_new:.2f})")
             new_polygon.append((x_new, y_new))
         shifted.append({"name": name, "polygon": new_polygon})
     return shifted
 
+# ------------------ added functions for mask generation ------------------
+def parse_annotation(annotation_path):
+    tree = ET.parse(annotation_path)
+    root = tree.getroot()
+    all_coords = []
+    for annot in root.findall("Annotation"):
+        for region in annot.find("Regions").findall("Region"):
+            polygon = []
+            for v in region.findall(".//Vertices/V"):
+                x = float(v.get("X"))
+                y = float(v.get("Y"))
+                polygon.append((x, y))
+            all_coords.append(polygon)
+    return all_coords
+
+def load_offsets(offset_csv):
+    df = pd.read_csv(offset_csv)
+    offsets = {}
+    for _, row in df.iterrows():
+        filename = row['Filename']
+        offset_str = row['Series_6']
+        if isinstance(offset_str, str):
+            offset_tuple = eval(offset_str)  # safely parse tuple string
+            offsets[filename] = offset_tuple
+    return offsets
+
+def apply_offset_and_create_mask(polygons, offset, pixel_size, downsample_factor, canvas_size):
+    ox, oy = offset
+    psx, psy = pixel_size
+    mask = np.zeros(canvas_size, dtype=np.uint8)
+
+    for polygon in polygons:
+        shifted = []
+        for x, y in polygon:
+            x_um = x * psx
+            y_um = y * psy
+            x_shift = int(round((x_um + ox) / (psx * downsample_factor)))
+            y_shift = int(round((y_um + oy) / (psy * downsample_factor)))
+            shifted.append((x_shift, y_shift))
+        cv2.fillPoly(mask, [np.array(shifted, dtype=np.int32)], color=255)
+    
+    return mask
+
+def process_all_annotations(annotation_dir, offset_csv, save_dir, canvas_size, pixel_size=(0.3433209, 0.3433189), downsample=4):
+    os.makedirs(save_dir, exist_ok=True)
+    offsets = load_offsets(offset_csv)
+
+    for fname in os.listdir(annotation_dir):
+        if not fname.endswith(".annotations"):
+            continue
+        
+        slide_name = fname.replace(".annotations", ".vsi")
+        if slide_name not in offsets:
+            print(f"⚠️ Offset not found for {slide_name}")
+            continue
+
+        offset_x, offset_y = offsets[slide_name]
+        annotation_path = os.path.join(annotation_dir, fname)
+        polygons = parse_annotation(annotation_path)
+
+        mask = apply_offset_and_create_mask(polygons, (offset_x, offset_y), pixel_size, downsample, canvas_size)
+        
+        # Save mask
+        out_path = os.path.join(save_dir, fname.replace(".annotations", "_mask.png"))
+        cv2.imwrite(out_path, mask)
+        print(f"✅ Saved mask for {slide_name} to {out_path}")
+
+
 def main():
 
-    # vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans\PT 52 B.vsi" # series 8, scale 4
-    # annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\PT 52 B (1).annotations"
+    vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans\PT 52 B.vsi" # series 8, scale 4
+    annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\PT 52 B.annotations"
     
     # vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 57B.vsi"
-    # annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\FA 57B (2).annotations"
+    # annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\FA 57B.annotations"
     
-    vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans\PT 35 B.vsi"
-    annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\PT 35 B.annotations"
+    # vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans\PT 35 B.vsi"
+    # annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\PT 35 B.annotations"
     
 
     # scale_factor = 10.09  # adjust based on downsample level
@@ -188,31 +224,45 @@ def main():
     pixel_size_y = 0.3433189
     # offset_x_um = ((-107248.19992049833)-(-89145.87))  # FA 57B # offset of cropped 20x image in microns
     # offset_y_um = ((-73463.97964187959)-(-66619.44)) # Fa 57B Origin	
-    # offset_x_um = ((-107248.19992049833)-(-96073.36))  # PT 52 B (-107248.19992049833, -73463.97964187959) (107248.19992049833 - 96073.36)
-    # offset_y_um = ((-73463.97964187959)-(-73150.42))  # PT 52 B
-    offset_x_um = ((-107248.19992049833)-(-96357.44876760358))  # PT 35 B # offset of cropped 20x image in microns
-    offset_y_um = ((-73463.97964187959)-(-72208.0167180309)) # PT 35 B Origin
+    offset_x_um = ((-107248.19992049833)-(-96073.36))  # PT 52 B (-107248.19992049833, -73463.97964187959) (107248.19992049833 - 96073.36)
+    offset_y_um = ((-73463.97964187959)-(-73150.42))  # PT 52 B
+    # offset_x_um = ((-107248.19992049833)-(-96357.44876760358))  # PT 35 B # offset of cropped 20x image in microns
+    # offset_y_um = ((-73463.97964187959)-(-72208.0167180309)) # PT 35 B Origin
+    # offset_x_um = 0
+    # offset_y_um = 0
 
     # Load image
-    image = load_vsi_image(vsi_path, series=series)
+    # image = load_vsi_image(vsi_path, series=series)
     # image = load_slide_in_tiles(vsi_path, tile_size=tile_size, series=series)
 
     # # Parse annotations
-    annotations = parse_all_annotations(annotation_path, scale_factor=downsample_factor)
-    annotations2 = parse_all_annotations2(annotation_path)
+    annotations = parse_all_annotations(annotation_path)
     # --------------------------
     # --- Parse and adjust annotations ---
     annotations_shifted = apply_offset_to_annotations(
-        annotations2,
+        annotations,
         offset_x_um, offset_y_um,
         pixel_size_x, pixel_size_y,
         downsample_factor
     )
     # --------------------------
+    # testing with reconstructed image 
+    from PIL import Image
+    import numpy as np
+    Image.MAX_IMAGE_PIXELS = None
+    # Load the saved PNG image
+    reconstructed_image = np.array(Image.open(r"C:\Users\Vivian\Documents\CONCH\PT 52B_reconstructed_image.png"))
+
 
     # --- Visualize ---
     # visualize_annotations(image, annotations)
-    visualize_annotations(image, annotations_shifted)
+    # visualize_annotations(image, annotations_shifted)
+    visualize_annotations(reconstructed_image, annotations_shifted)
+
+
+    # --------------------------
+    # --- Generate masks ---
+    
 
 if __name__ == "__main__":#
     main()
