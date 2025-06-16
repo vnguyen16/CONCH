@@ -303,11 +303,11 @@ def process_selected_slides(root_folder, predictions_csv, patch_size=(224, 224))
                     reconstruct_image_with_predictions(slide_folder, patch_map_csv, predictions_df, patch_size)
 
 # Example usage:
-root_folder = r"C:\Users\Vivian\Documents\CONCH\patches"
+root_folder = r"C:\Users\Vivian\Documents\CONCH\patches_annotated"
 # predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\patient_split_UNI70_linprob.csv'
 # predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\UNI_linprob_ann_test.csv'
 # predictions_csv = r"C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\CONCH_linprob_ann_test.csv"
-predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\UNI90_test_ann_only.csv'
+predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\CONCH_linprob_ann_run2_test.csv'
 
 process_selected_slides(root_folder, predictions_csv)
 

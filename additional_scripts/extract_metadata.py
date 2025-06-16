@@ -30,9 +30,9 @@ from tqdm import tqdm
 # Paths
 bftools_path = r"C:\Users\Vivian\Downloads\bftools\bftools\showinf.bat"  # Path to Bio-Formats tool
 vsi_folder = r"C:\Users\Vivian\Documents\VSI_Files"  # Folder containing VSI files
-# vsi_folder = r"C:\Users\Vivian\Documents\slide" # trying with one slide 
-vsi_folder = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans" # trying with remote server
-output_csv = "vsi_PT_metadata.csv"  # Output CSV file
+vsi_folder = r"C:\Users\Vivian\Documents\slide" # trying with one slide 
+# vsi_folder = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans" # trying with remote server
+output_csv = "vsi_PT_metadata_testslide.csv"  # Output CSV file
 
 # Function to extract metadata from a VSI file
 def extract_metadata(vsi_file):
@@ -48,12 +48,11 @@ def extract_metadata(vsi_file):
             print(f"Error processing {vsi_file}: {stderr}")
             return None
         
-        # print(stdout)
+        print(stdout)
 
         # Store metadata
         metadata = {"Filename": os.path.basename(vsi_file)}
         
-
 
         # Extract Nominal Magnifications (can be multiple values)
         magnifications = re.findall(r'NominalMagnification="([\d\.]+)"', stdout)
@@ -86,12 +85,13 @@ for vsi_file in tqdm(vsi_files, desc="Processing VSI files", unit="file"):
     if metadata:
         metadata_list.append(metadata)
 
+# print(metadata_list)
 
-# Convert to DataFrame and save to CSV
-df = pd.DataFrame(metadata_list)
-df.to_csv(output_csv, index=False)
+# # Convert to DataFrame and save to CSV
+# df = pd.DataFrame(metadata_list)
+# df.to_csv(output_csv, index=False)
 
-print(f"Metadata saved to {output_csv}")
+# print(f"Metadata saved to {output_csv}")
 
 
 # # problem with parsing the files of the directory, works fine when using a single file. create a loop for the files in the directory

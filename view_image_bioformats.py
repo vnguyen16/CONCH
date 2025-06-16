@@ -105,7 +105,8 @@ def visualize_patch_distribution(image, patches, patch_size=224):
         )
         ax.add_patch(rect)
 
-    plt.title("Patch Grid Overlay on WSI")
+    # plt.title("Patch Grid Overlay on WSI")
+    plt.tight_layout()
     plt.axis("off")  # Hide axes for a cleaner visualization
     plt.show()
 
@@ -153,37 +154,6 @@ def save_patches_as_numpy(patches, output_dir):
             # Write mapping to CSV
             writer.writerow([patch_filename, x, y])
 
-
-# ----------------------------------------------
-# # Main Workflow
-# output_dir = "C:\\Users\\Vivian\\Documents\\FA57_B1_level7_numpy"
-
-# # Use the numpy array created with the bioformats library
-# image = image_np
-# print(f"Loaded WSI with shape: {image.shape}")
-
-# # Extract relevant patches
-# patches = extract_patches(
-#     image,
-#     patch_size=PATCH_SIZE,
-#     stride=STRIDE,
-#     white_threshold=WHITE_THRESHOLD,
-#     border_pixel_threshold=BORDER_PIXEL_THRESHOLD
-# )
-# print(f"Extracted {len(patches)} relevant patches.")
-
-# # Visualize patch distribution
-# visualize_patch_distribution(image, patches, patch_size=PATCH_SIZE)
-
-# Save patches
-# save_patches(patches, output_dir)
-# print(f"Patches saved to {output_dir}")
-
-# ----------------------------------------------
-# Saving patches as NumPy arrays
-# save_patches_as_numpy(patches, output_dir)
-# print(f"Patches and mapping saved to {output_dir}")
-
 # ----------------------------------------------
 
 def main():
@@ -202,17 +172,18 @@ def main():
 
     # Read the VSI image
     # vsi_file = "C:/Users/Vivian/Documents/slide/PT 96 A1.vsi"
-    # vsi_file = "Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans\PT 54 B1.vsi" # testing with slide from serevr
+    # vsi_file = "Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans\PT 39 B.vsi" # testing with slide from serevr 40x
     # vsi_file = "Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 47 B1.vsi" # 40x mag - use series 9?
     # vsi_file = "Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 57B.vsi" # 20x mag - use series 7?
     # vsi_file = "Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 60 B.vsi"
     # vsi_file = "Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 60 B.vsi" 
-    vsi_file = "Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 62 B.vsi" # testing out slides not succesfully processed (mostly 20x - series 8)
+    # vsi_file = "Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 62 B.vsi" # testing out slides not succesfully processed (mostly 20x - series 8)
+    vsi_file = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 57B.vsi"
 
     # image = bioformats.load_image(vsi_file)
     # metadata = bioformats.get_omexml_metadata(vsi_file)
 
-    image = bioformats.load_image(vsi_file, series=8, rescale=False) # Highest resolution that could be loaded = 7 (FA 57B (20701, 28980, 3) - 2nd highest size)
+    image = bioformats.load_image(vsi_file, series=0, rescale=False) # Highest resolution that could be loaded = 7 (FA 57B (20701, 28980, 3) - 2nd highest size)
 
     # Convert to NumPy array
     image_np = np.array(image)
@@ -223,7 +194,7 @@ def main():
     # --------------------------------------------- 
 
     # Main Workflow
-    output_dir = r"C:\Users\Vivian\Documents\CONCH\patches_annotated\20x\FA\FA 62 B"
+    output_dir = r"C:\Users\Vivian\Documents\CONCH\patches_annotated\20x\FA\FA 57B-2"
 
     # Use the numpy array created with the bioformats library
     image = image_np
@@ -247,8 +218,8 @@ def main():
     # print(f"Patches saved to {output_dir}")
 
     # Saving patches as NumPy arrays
-    save_patches_as_numpy(patches, output_dir)
-    print(f"Patches and mapping saved to {output_dir}")
+    # save_patches_as_numpy(patches, output_dir)
+    # print(f"Patches and mapping saved to {output_dir}")
 
 # ----------------------------------------------
 

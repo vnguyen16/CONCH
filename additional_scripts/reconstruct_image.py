@@ -57,8 +57,8 @@ def reconstruct_image_from_patches(patch_folder, csv_path, patch_size=(224, 224)
 
 # Example usage:
 # patch_folder = "C:\\Users\\Vivian\\Documents\\FA47_B1_level9_numpy"
-# patch_folder = r"C:\Users\Vivian\Documents\CONCH\patches\20x\FA\FA 88 B"
-patch_folder = r'C:\Users\Vivian\Documents\CONCH\patches_annotated\20x\FA\FA 62 B'
+patch_folder = r"C:\Users\Vivian\Documents\CONCH\patches\20x\FA\FA 88 B"
+# patch_folder = r'C:\Users\Vivian\Documents\CONCH\patches_tiled\FA_47B1'
 csv_path = os.path.join(patch_folder, "patch_map.csv")
 
 visualize_patches(patch_folder, csv_path, num_patches=16)

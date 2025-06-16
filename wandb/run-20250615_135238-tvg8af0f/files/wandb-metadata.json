@@ -1,0 +1,43 @@
+{
+  "os":  "Windows-10-10.0.26100-SP0",
+  "python":  "CPython 3.10.15",
+  "startedAt":  "2025-06-15T17:52:39.110414Z",
+  "program":  "c:\\Users\\Vivian\\Documents\\CONCH\\finetune_conch.ipynb",
+  "codePath":  "finetune_conch.ipynb",
+  "git":  {
+    "remote":  "https://github.com/vnguyen16/CONCH.git",
+    "commit":  "59891869f5a6f9f87b24f8e9dd9611e7fc2f0d17"
+  },
+  "email":  "19vn@queensu.ca",
+  "root":  "c:\\Users\\Vivian\\Documents\\CONCH",
+  "host":  "Stroma",
+  "executable":  "c:\\Users\\Vivian\\anaconda3\\envs\\conch\\python.exe",
+  "codePathLocal":  "finetune_conch.ipynb",
+  "cpu_count":  20,
+  "cpu_count_logical":  28,
+  "gpu":  "NVIDIA GeForce RTX 4070 SUPER",
+  "gpu_count":  1,
+  "disk":  {
+    "/":  {
+      "total":  "1999469801472",
+      "used":  "1085886300160"
+    }
+  },
+  "memory":  {
+    "total":  "34181935104"
+  },
+  "cpu":  {
+    "count":  20,
+    "countLogical":  28
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "NVIDIA GeForce RTX 4070 SUPER",
+      "memoryTotal":  "12878610432",
+      "cudaCores":  7168,
+      "architecture":  "Ada",
+      "uuid":  "GPU-f7e6b7d9-69c3-a3bd-fb01-4ddd9f3ee524"
+    }
+  ],
+  "cudaVersion":  "12.7"
+}
