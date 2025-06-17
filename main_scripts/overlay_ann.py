@@ -133,136 +133,194 @@ def apply_offset_to_annotations(annotations, offset_x_um, offset_y_um, pixel_siz
     return shifted
 
 # ------------------ added functions for mask generation ------------------
-def parse_annotation(annotation_path):
+from shapely.geometry import Point, Polygon
+from tqdm import tqdm
+def parse_annotation_file(annotation_path):
     tree = ET.parse(annotation_path)
     root = tree.getroot()
-    all_coords = []
+
+    all_polygons = []
     for annot in root.findall("Annotation"):
-        for region in annot.find("Regions").findall("Region"):
+
+        name = annot.attrib.get("Name", "Unnamed")
+
+        if name.lower() == "border" or name.lower() == "normal/ other":
+            continue  # ✅ Skip testing/debug border annotations
+
+        regions = annot.find("Regions")
+        if regions is None:
+            continue
+        for region in regions.findall("Region"):
             polygon = []
             for v in region.findall(".//Vertices/V"):
                 x = float(v.get("X"))
                 y = float(v.get("Y"))
                 polygon.append((x, y))
-            all_coords.append(polygon)
-    return all_coords
+        
+            if len(polygon) < 3:
+                continue  # Skip invalid polygons
 
-def load_offsets(offset_csv):
-    df = pd.read_csv(offset_csv)
-    offsets = {}
-    for _, row in df.iterrows():
-        filename = row['Filename']
-        offset_str = row['Series_6']
-        if isinstance(offset_str, str):
-            offset_tuple = eval(offset_str)  # safely parse tuple string
-            offsets[filename] = offset_tuple
-    return offsets
+            # ✅ Close the polygon
+            if polygon[0] != polygon[-1]:
+                polygon.append(polygon[0])
+            
+            all_polygons.append(polygon)
 
-def apply_offset_and_create_mask(polygons, offset, pixel_size, downsample_factor, canvas_size):
-    ox, oy = offset
-    psx, psy = pixel_size
-    mask = np.zeros(canvas_size, dtype=np.uint8)
+    return all_polygons
 
-    for polygon in polygons:
-        shifted = []
+def apply_offset_to_annotations(annotations, offset_x_um, offset_y_um,
+                                 pixel_size_x, pixel_size_y, downsample_factor=1.0):
+    shifted = []
+    for polygon in annotations:
+        new_polygon = []
         for x, y in polygon:
-            x_um = x * psx
-            y_um = y * psy
-            x_shift = int(round((x_um + ox) / (psx * downsample_factor)))
-            y_shift = int(round((y_um + oy) / (psy * downsample_factor)))
-            shifted.append((x_shift, y_shift))
-        cv2.fillPoly(mask, [np.array(shifted, dtype=np.int32)], color=255)
-    
-    return mask
+            x_um = x * pixel_size_x
+            y_um = y * pixel_size_y
+            x_new = (x_um + offset_x_um) / (pixel_size_x * downsample_factor)
+            y_new = (y_um + offset_y_um) / (pixel_size_y * downsample_factor)
+            new_polygon.append((x_new, y_new))
+        shifted.append(new_polygon)
+    return shifted
 
-def process_all_annotations(annotation_dir, offset_csv, save_dir, canvas_size, pixel_size=(0.3433209, 0.3433189), downsample=4):
-    os.makedirs(save_dir, exist_ok=True)
-    offsets = load_offsets(offset_csv)
+def generate_patch_mask_csv(patch_map_csv, shifted_annotations):
+    df = pd.read_csv(patch_map_csv)
+    df['InsideAnnotation'] = False
 
-    for fname in os.listdir(annotation_dir):
+    patch_polygons = [Polygon(p) for p in shifted_annotations]
+
+    for i, row in df.iterrows():
+        x, y = row['x'], row['y']
+        patch_center = Point(x + 112, y + 112)  # Assuming patch size is 224x224
+        for poly in patch_polygons:
+            if poly.contains(patch_center):
+                df.at[i, 'InsideAnnotation'] = True
+                break
+
+    return df[['patch_file', 'x', 'y', 'InsideAnnotation']]
+
+def batch_generate_patch_csvs_with_offset(annotation_dir, slide_root, output_dir, metadata_csv,
+                                          pixel_size_x, pixel_size_y, downsample_factor):
+    os.makedirs(output_dir, exist_ok=True)
+    metadata_df = pd.read_csv(metadata_csv)
+    series0_offset = (-107248.19992049833, -73463.97964187959)
+
+    for fname in tqdm(os.listdir(annotation_dir)):
         if not fname.endswith(".annotations"):
             continue
+
+        base = os.path.splitext(fname)[0]
+        slide_name = base + ".vsi"
+        row = metadata_df[metadata_df['Filename'] == slide_name]
+        if row.empty:
+            print(f"⚠️ Metadata missing for {slide_name}")
+            continue
         
-        slide_name = fname.replace(".annotations", ".vsi")
-        if slide_name not in offsets:
-            print(f"⚠️ Offset not found for {slide_name}")
+        output_path = os.path.join(output_dir, f"{base}_patch_mask.csv")
+        if os.path.exists(output_path):
+            print(f"⏭️ Skipping {base}: CSV already exists")
+            continue  # ✅ Skip if already generated
+        
+        try:
+            offset_str = row.iloc[0]['Series_6'].strip("()")
+            offset_values = tuple(map(float, offset_str.split(",")))
+            offset_x_um = series0_offset[0] - offset_values[0]
+            offset_y_um = series0_offset[1] - offset_values[1]
+        except:
+            print(f"⚠️ Offset parse error for {slide_name}")
             continue
 
-        offset_x, offset_y = offsets[slide_name]
         annotation_path = os.path.join(annotation_dir, fname)
-        polygons = parse_annotation(annotation_path)
+        annotations = parse_annotation_file(annotation_path)
+        shifted_annotations = apply_offset_to_annotations(
+            annotations, offset_x_um, offset_y_um,
+            pixel_size_x, pixel_size_y, downsample_factor
+        )
 
-        mask = apply_offset_and_create_mask(polygons, (offset_x, offset_y), pixel_size, downsample, canvas_size)
-        
-        # Save mask
-        out_path = os.path.join(save_dir, fname.replace(".annotations", "_mask.png"))
-        cv2.imwrite(out_path, mask)
-        print(f"✅ Saved mask for {slide_name} to {out_path}")
+        patch_map_path = os.path.join(slide_root, base, "patch_map.csv")
+        if not os.path.exists(patch_map_path):
+            print(f"⚠️ Missing patch_map.csv for {base}")
+            continue
+
+        patch_mask_df = generate_patch_mask_csv(patch_map_path, shifted_annotations)
+        output_path = os.path.join(output_dir, f"{base}_patch_mask.csv")
+        patch_mask_df.to_csv(output_path, index=False)
+        print(f"✅ Saved: {output_path}")
 
 
 def main():
-
-    vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans\PT 52 B.vsi" # series 8, scale 4
-    annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\PT 52 B.annotations"
+    # vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans\PT 52 B.vsi" # series 8, scale 4
+    # annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\PT 52 B.annotations"
     
-    # vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 57B.vsi"
-    # annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\FA 57B.annotations"
+    # # vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 57B.vsi"
+    # # annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\FA 57B.annotations"
     
-    # vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans\PT 35 B.vsi"
-    # annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\PT 35 B.annotations"
+    # # vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans\PT 35 B.vsi"
+    # # annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\PT 35 B.annotations"
     
 
-    # scale_factor = 10.09  # adjust based on downsample level
-    # series = 0  # select correct resolution level
-    # tile_size = 100
+    # # scale_factor = 10.09  # adjust based on downsample level
+    # # series = 0  # select correct resolution level
+    # # tile_size = 100
 
-    # --- Parameters ---
-    series = 8  # downsampled series
-    # scale_factor = 4  # original to 20x full-res
-    downsample_factor = 4  # series 8 is 4x downsampled from 20x
-    pixel_size_x = 0.3433209  # in microns
-    pixel_size_y = 0.3433189
-    # offset_x_um = ((-107248.19992049833)-(-89145.87))  # FA 57B # offset of cropped 20x image in microns
-    # offset_y_um = ((-73463.97964187959)-(-66619.44)) # Fa 57B Origin	
-    offset_x_um = ((-107248.19992049833)-(-96073.36))  # PT 52 B (-107248.19992049833, -73463.97964187959) (107248.19992049833 - 96073.36)
-    offset_y_um = ((-73463.97964187959)-(-73150.42))  # PT 52 B
-    # offset_x_um = ((-107248.19992049833)-(-96357.44876760358))  # PT 35 B # offset of cropped 20x image in microns
-    # offset_y_um = ((-73463.97964187959)-(-72208.0167180309)) # PT 35 B Origin
-    # offset_x_um = 0
-    # offset_y_um = 0
+    # # --- Parameters ---
+    # series = 8  # downsampled series
+    # # scale_factor = 4  # original to 20x full-res
+    # downsample_factor = 4  # series 8 is 4x downsampled from 20x
+    # pixel_size_x = 0.3433209  # in microns
+    # pixel_size_y = 0.3433189
+    # # offset_x_um = ((-107248.19992049833)-(-89145.87))  # FA 57B # offset of cropped 20x image in microns
+    # # offset_y_um = ((-73463.97964187959)-(-66619.44)) # Fa 57B Origin	
+    # offset_x_um = ((-107248.19992049833)-(-96073.36))  # PT 52 B (-107248.19992049833, -73463.97964187959) (107248.19992049833 - 96073.36)
+    # offset_y_um = ((-73463.97964187959)-(-73150.42))  # PT 52 B
+    # # offset_x_um = ((-107248.19992049833)-(-96357.44876760358))  # PT 35 B # offset of cropped 20x image in microns
+    # # offset_y_um = ((-73463.97964187959)-(-72208.0167180309)) # PT 35 B Origin
+    # # offset_x_um = 0
+    # # offset_y_um = 0
 
-    # Load image
-    # image = load_vsi_image(vsi_path, series=series)
-    # image = load_slide_in_tiles(vsi_path, tile_size=tile_size, series=series)
+    # # Load image
+    # # image = load_vsi_image(vsi_path, series=series)
+    # # image = load_slide_in_tiles(vsi_path, tile_size=tile_size, series=series)
 
-    # # Parse annotations
-    annotations = parse_all_annotations(annotation_path)
-    # --------------------------
-    # --- Parse and adjust annotations ---
-    annotations_shifted = apply_offset_to_annotations(
-        annotations,
-        offset_x_um, offset_y_um,
-        pixel_size_x, pixel_size_y,
-        downsample_factor
+    # # # Parse annotations
+    # annotations = parse_all_annotations(annotation_path)
+    # # --------------------------
+    # # --- Parse and adjust annotations ---
+    # annotations_shifted = apply_offset_to_annotations(
+    #     annotations,
+    #     offset_x_um, offset_y_um,
+    #     pixel_size_x, pixel_size_y,
+    #     downsample_factor
+    # )
+    # # --------------------------
+    # # testing with reconstructed image 
+    # from PIL import Image
+    # import numpy as np
+    # Image.MAX_IMAGE_PIXELS = None
+    # # Load the saved PNG image
+    # reconstructed_image = np.array(Image.open(r"C:\Users\Vivian\Documents\CONCH\PT 52B_reconstructed_image.png"))
+
+
+    # # --- Visualize ---
+    # # visualize_annotations(image, annotations)
+    # # visualize_annotations(image, annotations_shifted)
+    # visualize_annotations(reconstructed_image, annotations_shifted)
+
+
+    # ----------------------------------------------------------------
+    # --- Generate masks and save patch mask csv ---
+    # annotation_dir = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations"
+    # offset_csv = r"C:\Users\Vivian\Documents\CONCH\PT_plane_metadata.csv"
+    # save_dir = r"path\to\save\masks"
+    batch_generate_patch_csvs_with_offset(
+    annotation_dir=r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations",
+    slide_root=r"C:\Users\Vivian\Documents\CONCH\all_patches\patches_5x\20x\FA",
+    output_dir=r"C:\Users\Vivian\Documents\CONCH\series8_5x_masks",
+    metadata_csv=r"C:\Users\Vivian\Documents\CONCH\FA_plane_metadata.csv",
+    pixel_size_x=0.3433209,
+    pixel_size_y=0.3433189,
+    downsample_factor=4
     )
-    # --------------------------
-    # testing with reconstructed image 
-    from PIL import Image
-    import numpy as np
-    Image.MAX_IMAGE_PIXELS = None
-    # Load the saved PNG image
-    reconstructed_image = np.array(Image.open(r"C:\Users\Vivian\Documents\CONCH\PT 52B_reconstructed_image.png"))
 
 
-    # --- Visualize ---
-    # visualize_annotations(image, annotations)
-    # visualize_annotations(image, annotations_shifted)
-    visualize_annotations(reconstructed_image, annotations_shifted)
-
-
-    # --------------------------
-    # --- Generate masks ---
-    
-
-if __name__ == "__main__":#
+if __name__ == "__main__":
     main()
