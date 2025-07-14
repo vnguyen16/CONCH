@@ -11,6 +11,11 @@ tests/data/
 *mgb*
 DEBUG*
 
+# wandb
+*wandb-metadata.json
+*wandb-summary.json
+*.wandb
+
 # data features
 .png
 *.png

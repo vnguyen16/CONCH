@@ -311,22 +311,27 @@ def show_selected_patches_only(patch_folder, selected_df):
 
 def main():
     # --------------- 1. visualize/reconstruct patches ---------------------
-    # # patch_folder = "C:\\Users\\Vivian\\Documents\\FA47_B1_level9_numpy"
-    # # patch_folder = r"C:\Users\Vivian\Documents\CONCH\patches\20x\FA\FA 88 B"
-    # patch_folder = r'C:\Users\Vivian\Documents\CONCH\patches\20x\FA\FA 57B'
-    # csv_path = os.path.join(patch_folder, "patch_map.csv")
+    from PIL import Image
+    # patch_folder = "C:\\Users\\Vivian\\Documents\\FA47_B1_level9_numpy"
+    # patch_folder = r"C:\Users\Vivian\Documents\CONCH\patches\20x\FA\FA 88 B"
+    patch_folder = r'C:\Users\Vivian\Documents\CONCH\all_patches\patches_5x\20x\PT\PT 52 B'
+    csv_path = os.path.join(patch_folder, "patch_map.csv")
 
     # visualize_patches(patch_folder, csv_path, num_patches=16)
-    # reconstruct_image(patch_folder, csv_path)
+    img = reconstruct_image(patch_folder, csv_path)
+
+    # # Save the reconstructed image
+    # save_path = "PT 52B_og5x_reconstructed_image.png"
+    # Image.fromarray(img).save(save_path)
 
     # ------------- 2. reconstruct image with predictions overlaid ---------------------
-    root_folder = r"C:\Users\Vivian\Documents\CONCH\patches_tiled\patches_10x"
-    # # predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\patient_split_UNI70_linprob.csv'
-    # # predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\UNI_linprob_ann_test.csv'
-    # # predictions_csv = r"C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\CONCH_linprob_ann_test.csv"
-    # predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\UNI_linprob_ann_cleanlearning_test.csv'
-    predictions_csv = r"C:\Users\Vivian\Documents\CONCH\patch_predictions\10x\ResNet50_linprob_test.csv"
-    process_selected_slides(root_folder, predictions_csv)
+    # root_folder = r"C:\Users\Vivian\Documents\CONCH\patches_tiled\patches_10x"
+    # # # predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\patient_split_UNI70_linprob.csv'
+    # # # predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\UNI_linprob_ann_test.csv'
+    # # # predictions_csv = r"C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\CONCH_linprob_ann_test.csv"
+    # # predictions_csv = r'C:\Users\Vivian\Documents\CONCH\patch_predictions\annotated\UNI_linprob_ann_cleanlearning_test.csv'
+    # predictions_csv = r"C:\Users\Vivian\Documents\CONCH\patch_predictions\breakhis_5x\uni_10x_test_ann.csv"
+    # process_selected_slides(root_folder, predictions_csv)
 
     # ---------------- 3. compute slide accuracy ---------------------
     # csv_path = r"C:\Users\Vivian\Documents\CONCH\patch_predictions\10x\ResNet50_linprob_test.csv"

@@ -58,9 +58,9 @@ def reconstruct_image_with_patch_mask(slide_folder, patch_map_csv, patch_mask_cs
 
 def main():
     reconstruct_image_with_patch_mask(
-        slide_folder=r"C:\Users\Vivian\Documents\CONCH\all_patches\patches_5x\20x\FA\FA 60 B",
-        patch_map_csv=r"C:\Users\Vivian\Documents\CONCH\all_patches\patches_5x\20x\FA\FA 60 B\patch_map.csv",
-        patch_mask_csv=r"C:\Users\Vivian\Documents\CONCH\series8_5x_masks\FA 60 B_patch_mask.csv"
+        slide_folder=r"C:\Users\Vivian\Documents\CONCH\all_patches\patches_2.5x\20x\FA\FA 60 B",
+        patch_map_csv=r"C:\Users\Vivian\Documents\CONCH\all_patches\patches_2.5x\20x\FA\FA 60 B\patch_map.csv",
+        patch_mask_csv=r"C:\Users\Vivian\Documents\CONCH\series9_2.5x_masks\FA 60 B_patch_mask.csv"
     )
 
 if __name__ == "__main__":

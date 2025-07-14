@@ -219,7 +219,7 @@ def batch_generate_patch_csvs_with_offset(annotation_dir, slide_root, output_dir
         if os.path.exists(output_path):
             print(f"⏭️ Skipping {base}: CSV already exists")
             continue  # ✅ Skip if already generated
-        
+
         try:
             offset_str = row.iloc[0]['Series_6'].strip("()")
             offset_values = tuple(map(float, offset_str.split(",")))
@@ -248,78 +248,79 @@ def batch_generate_patch_csvs_with_offset(annotation_dir, slide_root, output_dir
 
 
 def main():
-    # vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans\PT 52 B.vsi" # series 8, scale 4
-    # annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\PT 52 B.annotations"
+    vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans\PT 52 B.vsi" # series 8, scale 4
+    annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\PT 52 B.annotations"
     
-    # # vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 57B.vsi"
-    # # annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\FA 57B.annotations"
+    # vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 57B.vsi"
+    # annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\FA 57B.annotations"
     
-    # # vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans\PT 35 B.vsi"
-    # # annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\PT 35 B.annotations"
+    # vsi_path = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans\PT 35 B.vsi"
+    # annotation_path = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations\PT 35 B.annotations"
     
 
-    # # scale_factor = 10.09  # adjust based on downsample level
-    # # series = 0  # select correct resolution level
-    # # tile_size = 100
+    # scale_factor = 10.09  # adjust based on downsample level
+    # series = 0  # select correct resolution level
+    # tile_size = 100
 
-    # # --- Parameters ---
-    # series = 8  # downsampled series
-    # # scale_factor = 4  # original to 20x full-res
-    # downsample_factor = 4  # series 8 is 4x downsampled from 20x
-    # pixel_size_x = 0.3433209  # in microns
-    # pixel_size_y = 0.3433189
-    # # offset_x_um = ((-107248.19992049833)-(-89145.87))  # FA 57B # offset of cropped 20x image in microns
-    # # offset_y_um = ((-73463.97964187959)-(-66619.44)) # Fa 57B Origin	
-    # offset_x_um = ((-107248.19992049833)-(-96073.36))  # PT 52 B (-107248.19992049833, -73463.97964187959) (107248.19992049833 - 96073.36)
-    # offset_y_um = ((-73463.97964187959)-(-73150.42))  # PT 52 B
-    # # offset_x_um = ((-107248.19992049833)-(-96357.44876760358))  # PT 35 B # offset of cropped 20x image in microns
-    # # offset_y_um = ((-73463.97964187959)-(-72208.0167180309)) # PT 35 B Origin
-    # # offset_x_um = 0
-    # # offset_y_um = 0
+    # --- Parameters ---
+    series = 8  # downsampled series
+    # scale_factor = 4  # original to 20x full-res
+    downsample_factor = 4  # series 8 is 4x downsampled from 20x
+    pixel_size_x = 0.3433209  # in microns
+    pixel_size_y = 0.3433189
+    # offset_x_um = ((-107248.19992049833)-(-89145.87))  # FA 57B # offset of cropped 20x image in microns
+    # offset_y_um = ((-73463.97964187959)-(-66619.44)) # Fa 57B Origin	
+    offset_x_um = ((-107248.19992049833)-(-96073.36))  # PT 52 B (-107248.19992049833, -73463.97964187959) (107248.19992049833 - 96073.36)
+    offset_y_um = ((-73463.97964187959)-(-73150.42))  # PT 52 B
+    # offset_x_um = ((-107248.19992049833)-(-96357.44876760358))  # PT 35 B # offset of cropped 20x image in microns
+    # offset_y_um = ((-73463.97964187959)-(-72208.0167180309)) # PT 35 B Origin
+    # offset_x_um = 0
+    # offset_y_um = 0
 
-    # # Load image
-    # # image = load_vsi_image(vsi_path, series=series)
-    # # image = load_slide_in_tiles(vsi_path, tile_size=tile_size, series=series)
+    # Load image
+    # image = load_vsi_image(vsi_path, series=series)
+    # image = load_slide_in_tiles(vsi_path, tile_size=tile_size, series=series)
 
-    # # # Parse annotations
+    # # Parse annotations
     # annotations = parse_all_annotations(annotation_path)
-    # # --------------------------
-    # # --- Parse and adjust annotations ---
-    # annotations_shifted = apply_offset_to_annotations(
-    #     annotations,
-    #     offset_x_um, offset_y_um,
-    #     pixel_size_x, pixel_size_y,
-    #     downsample_factor
-    # )
-    # # --------------------------
-    # # testing with reconstructed image 
-    # from PIL import Image
-    # import numpy as np
-    # Image.MAX_IMAGE_PIXELS = None
-    # # Load the saved PNG image
-    # reconstructed_image = np.array(Image.open(r"C:\Users\Vivian\Documents\CONCH\PT 52B_reconstructed_image.png"))
+    annotations = parse_annotation_file(annotation_path)
+    # --------------------------
+    # --- Parse and adjust annotations ---
+    annotations_shifted = apply_offset_to_annotations(
+        annotations,
+        offset_x_um, offset_y_um,
+        pixel_size_x, pixel_size_y,
+        downsample_factor
+    )
+    # --------------------------
+    # testing with reconstructed image 
+    from PIL import Image
+    import numpy as np
+    Image.MAX_IMAGE_PIXELS = None
+    # Load the saved PNG image
+    reconstructed_image = np.array(Image.open(r"C:\Users\Vivian\Documents\CONCH\PT 52B_og5x_reconstructed_image.png"))
 
 
-    # # --- Visualize ---
-    # # visualize_annotations(image, annotations)
-    # # visualize_annotations(image, annotations_shifted)
-    # visualize_annotations(reconstructed_image, annotations_shifted)
+    # --- Visualize ---
+    # visualize_annotations(image, annotations)
+    # visualize_annotations(image, annotations_shifted)
+    visualize_annotations(reconstructed_image, annotations_shifted)
 
 
     # ----------------------------------------------------------------
-    # --- Generate masks and save patch mask csv ---
-    # annotation_dir = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations"
-    # offset_csv = r"C:\Users\Vivian\Documents\CONCH\PT_plane_metadata.csv"
-    # save_dir = r"path\to\save\masks"
-    batch_generate_patch_csvs_with_offset(
-    annotation_dir=r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations",
-    slide_root=r"C:\Users\Vivian\Documents\CONCH\all_patches\patches_5x\20x\FA",
-    output_dir=r"C:\Users\Vivian\Documents\CONCH\series8_5x_masks",
-    metadata_csv=r"C:\Users\Vivian\Documents\CONCH\FA_plane_metadata.csv",
-    pixel_size_x=0.3433209,
-    pixel_size_y=0.3433189,
-    downsample_factor=4
-    )
+    # # --- Generate masks and save patch mask csv ---
+    # # annotation_dir = r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations"
+    # # offset_csv = r"C:\Users\Vivian\Documents\CONCH\PT_plane_metadata.csv"
+    # # save_dir = r"path\to\save\masks"
+    # batch_generate_patch_csvs_with_offset(
+    # annotation_dir=r"C:\Users\Vivian\OneDrive - Queen's University\research2025\breast_project\Amoon_annotation_code\halo_annotations",
+    # slide_root=r"C:\Users\Vivian\Documents\CONCH\all_patches\patches_2.5x\20x\FA",
+    # output_dir=r"C:\Users\Vivian\Documents\CONCH\series9_2.5x_masks",
+    # metadata_csv=r"C:\Users\Vivian\Documents\CONCH\FA_plane_metadata.csv",
+    # pixel_size_x=0.3433209,
+    # pixel_size_y=0.3433189,
+    # downsample_factor=8
+    # )
 
 
 if __name__ == "__main__":

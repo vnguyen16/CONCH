@@ -59,8 +59,33 @@ def extract_metadata(vsi_file, bftools_path):
     except subprocess.CalledProcessError:
         print(f"Error reading {vsi_file}")
         return None
+    
+def extract_plane_metadata(vsi_file, bftools_path):
+    cmd = f'"{bftools_path}" -nopix -omexml "{vsi_file}"'
+    try:
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
+        stdout, stderr = process.communicate()
+        if stderr:
+            print(f"Error processing {vsi_file}: {stderr}")
+            return None
 
-def extract_metadata_from_folder(bftools_path, vsi_folder, output_csv):
+        metadata = {"Filename": os.path.basename(vsi_file)}
+        plane_tags = [line for line in stdout.splitlines() if "<Plane" in line]
+
+        for idx, tag in enumerate(plane_tags):
+            match = re.search(r'PositionX="([-.\d]+)".*?PositionY="([-.\d]+)"', tag)
+            if match:
+                x, y = float(match.group(1)), float(match.group(2))
+                if x != 0 or y != 0:
+                    metadata[f"Series_{idx}"] = (x, y)
+
+        return metadata
+
+    except subprocess.CalledProcessError:
+        print(f"Error reading {vsi_file}")
+        return None
+
+def extract_metadata_from_folder(bftools_path, vsi_folder, output_csv, mode="basic"):
     """
     Extracts metadata from all VSI files in a given folder and saves it to a CSV file.
 
@@ -70,16 +95,18 @@ def extract_metadata_from_folder(bftools_path, vsi_folder, output_csv):
         output_csv (str): Path to save the output metadata CSV.
     """
     vsi_files = [os.path.join(vsi_folder, f) for f in os.listdir(vsi_folder) if f.endswith(".vsi")]
-
     metadata_list = []
-    for vsi_file in tqdm(vsi_files, desc="Processing VSI files", unit="file"):
-        metadata = extract_metadata(vsi_file, bftools_path)
+
+    parser = extract_metadata if mode == "basic" else extract_plane_metadata
+
+    for vsi_file in tqdm(vsi_files, desc=f"Extracting {mode} metadata", unit="file"):
+        metadata = parser(vsi_file, bftools_path)
         if metadata:
             metadata_list.append(metadata)
 
     df = pd.DataFrame(metadata_list)
     df.to_csv(output_csv, index=False)
-    print(f"Metadata saved to {output_csv}")
+    print(f"✅ Saved {mode} metadata to {output_csv}")
 
 # ------------------------------------------------------------------------------
 # 2. Filter samples by type and save them
@@ -246,11 +273,12 @@ def display_numpy_image(npy_path):
 
 def main():
     # ---- extracting metadata from vsi files ----
-    # bftools_path = r"C:\Users\Vivian\Downloads\bftools\bftools\showinf.bat"
-    # vsi_folder = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\PT scans"
-    # output_csv = "vsi_PT_metadata.csv"
+    bftools_path = r"C:\Users\Vivian\Downloads\bftools\bftools\showinf.bat"
+    vsi_folder = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans"
+    output_csv = "FA_plane_metadata.csv"
 
-    # extract_metadata_from_folder(bftools_path, vsi_folder, output_csv)
+    # extract_metadata_from_folder(bftools_path, vsi_folder, output_csv, mode="basic") 
+    extract_metadata_from_folder(bftools_path, vsi_folder, output_csv, mode="plane") # extract offset data
 
 
     # ---- creating plots ----
@@ -277,8 +305,8 @@ def main():
     # filter_and_save_samples_by_type(csv_files, sample_type)
 
     # --------display patches from numpy files--------
-    npy_path = r"C:\Users\Vivian\Documents\CONCH\patches\20x\FA\FA 57B\patch_1406_x4480_y5152.npy"
-    display_numpy_image(npy_path)
+    # npy_path = r"C:\Users\Vivian\Documents\CONCH\patches\20x\FA\FA 57B\patch_1406_x4480_y5152.npy"
+    # display_numpy_image(npy_path)
 
 
 if __name__ == "__main__":
