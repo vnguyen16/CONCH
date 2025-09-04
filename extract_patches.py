@@ -2,7 +2,7 @@
 This script extracts patches from all the slides based on filtered metadata.
 """
 # ---------------------------------------------
-# # loading entire slide into memory then extracting patches - this works
+# # A) loading entire slide into memory then extracting patches (for downsampled images) - this works
 
 # import bioformats
 # import javabridge
@@ -13,14 +13,15 @@ This script extracts patches from all the slides based on filtered metadata.
 # import matplotlib.pyplot as plt
 # import matplotlib.patches as mpatches
 # from tqdm import tqdm
-# from view_image_bioformats import extract_patches, save_patches_as_numpy
+## from view_image_bioformats import extract_patches, save_patches_as_numpy # used these functions previously
+# from load_slide_in_tiles import extract_patches, save_patches_as_numpy
 
 # # -------------------------------
 # #  Parameters
-# MAGNIFICATION = 40  # Change this to 40 if needed
-# METADATA_DIR = "metadata/filtered_slides"
-# OUTPUT_ROOT = f"all_patches/patches_2.5x/{MAGNIFICATION}x"
-# SLIDE_ROOT = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw"
+# MAGNIFICATION = 40  # max magnification
+# METADATA_DIR = "metadata/filtered_slides" # directory to metadata csv files
+# OUTPUT_ROOT = f"all_patches/patches_2.5x/{MAGNIFICATION}x" # output directory for patches
+# SLIDE_ROOT = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw" # directory to vsi slides
 
 # # -------------------------------
 # #  Locate metadata files
@@ -119,7 +120,7 @@ This script extracts patches from all the slides based on filtered metadata.
 # print("Processing complete!")
 
 # ---------------------------------------------
-# loading slide in tiles and extracting patches
+# B) loading slide in tiles (full res images) and extracting patches
 import bioformats
 import javabridge
 import numpy as np
@@ -129,10 +130,10 @@ from tqdm import tqdm
 from load_slide_in_tiles import extract_patches, save_patches_as_numpy, load_slide_in_tiles
 
 # Parameters
-MAGNIFICATION = 20
-METADATA_DIR = "metadata/filtered_slides"
-OUTPUT_ROOT = f"patches_tiled/patches_10x/{MAGNIFICATION}x"
-SLIDE_ROOT = r"Z:\\mirage\\med-i_data\\Data\\Amoon\\Pathology Raw"
+MAGNIFICATION = 20 # max magnification 
+METADATA_DIR = "metadata/filtered_slides" # directory to metadata csv files
+OUTPUT_ROOT = f"patches_tiled/patches_10x/{MAGNIFICATION}x" # output directory for patches
+SLIDE_ROOT = r"Z:\\mirage\\med-i_data\\Data\\Amoon\\Pathology Raw" # directory to vsi slides
 
 metadata_files = {
     "FA": os.path.join(METADATA_DIR, f"FA_filtered_slides_{MAGNIFICATION}x.csv"),
@@ -144,6 +145,7 @@ class_folder = {
     "PT": "PT scans"
 }
 
+# Series numbers for different magnifications
 series_map = {
     20: 7,
     40: 8
