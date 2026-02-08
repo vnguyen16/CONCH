@@ -24,16 +24,29 @@ def compute_statistics2(image, threshold_rng):
     rng = np.max(image, axis=-1) - np.min(image, axis=-1)
     return np.sum(rng > threshold_rng)
 
+# def extract_patches(image, x_offset, y_offset, patch_size=224, stride=224):
+#     patches = []
+#     h, w = image.shape[:2]
+#     for y in range(0, h - patch_size, stride):
+#         for x in range(0, w - patch_size, stride):
+#             patch = image[y:y + patch_size, x:x + patch_size, :]
+#             temp = compute_statistics2(patch, 5)
+#             if temp.sum() > patch_size * patch_size * 0.3:
+#                 patches.append({"patch": patch, "coordinates": (x + x_offset, y + y_offset)})
+#     return patches
+
+# ---- fix gaps in tiles -------
 def extract_patches(image, x_offset, y_offset, patch_size=224, stride=224):
     patches = []
     h, w = image.shape[:2]
-    for y in range(0, h - patch_size, stride):
-        for x in range(0, w - patch_size, stride):
+    for y in range(0, h - patch_size + 1, stride):
+        for x in range(0, w - patch_size + 1, stride):
             patch = image[y:y + patch_size, x:x + patch_size, :]
             temp = compute_statistics2(patch, 5)
             if temp.sum() > patch_size * patch_size * 0.3:
                 patches.append({"patch": patch, "coordinates": (x + x_offset, y + y_offset)})
     return patches
+# -----------------------------
 
 def load_slide_in_tiles(vsi_path, tile_size=1120, series=8):
     # ImageReader = javabridge.JB_Class("loci.formats.ImageReader")
@@ -89,8 +102,9 @@ def show_patch_overlay_on_slide(width, height, patch_info, patch_size=(224, 224)
     plt.show()
 
 def main():
-    vsi_path = r"Z:\\mirage\\med-i_data\\Data\\Amoon\\Pathology Raw\\FA scans\\FA 47 B1.vsi"
-    output_dir = r"C:\\Users\\Vivian\\Documents\\CONCH\\patches_tiled\\FA_47B1_40x"
+    # vsi_path = r"Z:\\mirage\\med-i_data\\Data\\Amoon\\Pathology Raw\\FA scans\\FA 47 B1.vsi"
+    vsi_path = r"Z:\med-i_data\Data\Amoon\Pathology Raw\FA scans\FA 47 B1.vsi"
+    output_dir = r"C:\\Users\\Vivian\\Documents\\CONCH\\patches_tiled_new\\FA_47B1_40x_gaps"
 
     tiles, (w, h) = load_slide_in_tiles(vsi_path, tile_size=TILE_SIZE, series=SERIES)
 
