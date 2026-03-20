@@ -26,6 +26,12 @@ def read_state_dict(checkpoint_path: str, map_location='cpu'):
 
 def load_checkpoint(model, checkpoint_path):
     state_dict = read_state_dict(checkpoint_path)
+
+    # add for conchv1.5 -----
+    if "visual.trunk.pos_embed" not in state_dict and "trunk.pos_embed" in state_dict:
+        state_dict["visual.trunk.pos_embed"] = state_dict["trunk.pos_embed"]
+    #----------------
+
     resize_pos_embed(state_dict, model)
     missing, unexpected = model.load_state_dict(state_dict, strict=False)
 

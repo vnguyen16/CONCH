@@ -15,6 +15,7 @@ DEBUG*
 *wandb-metadata.json
 *wandb-summary.json
 *.wandb
+*requirements.txt
 
 # data features
 .png
@@ -24,6 +25,9 @@ DEBUG*
 *.pickle
 .npy
 *.npy
+*.h5
+*.hdf5
+*.npz
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

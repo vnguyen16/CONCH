@@ -275,10 +275,10 @@ def main():
     # ---- extracting metadata from vsi files ----
     bftools_path = r"C:\Users\Vivian\Downloads\bftools\bftools\showinf.bat"
     vsi_folder = r"Z:\mirage\med-i_data\Data\Amoon\Pathology Raw\FA scans"
-    output_csv = "FA_plane_metadata.csv"
+    output_csv = "FA_metadata.csv"
 
-    # extract_metadata_from_folder(bftools_path, vsi_folder, output_csv, mode="basic") 
-    extract_metadata_from_folder(bftools_path, vsi_folder, output_csv, mode="plane") # extract offset data
+    extract_metadata_from_folder(bftools_path, vsi_folder, output_csv, mode="basic") 
+    # extract_metadata_from_folder(bftools_path, vsi_folder, output_csv, mode="plane") # extract offset data
 
 
     # ---- creating plots ----

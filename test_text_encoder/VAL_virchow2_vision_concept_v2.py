@@ -18,6 +18,7 @@ import h5py
 # -----------------
 # configs for concept guided attn
 PATCH_CONCEPT_CSV = r"C:\Users\Vivian\Documents\CONCH\test_text_encoder\slide_concept_scores\noCAP_patch_ptfile_notopk_conf_PATCH.csv"
+# PATCH_CONCEPT_CSV = r"C:\Users\Vivian\Documents\CONCH\test_text_encoder\V3_concept_prior\V3_concept_prior_PATCH.csv"
 SLIDE_COL = "slide_id"
 LABEL_COL = "true_label_str"
 X_COL, Y_COL = "x", "y"
@@ -45,16 +46,22 @@ TOPK = None         # e.g., 1024 (rank by deep_norm)
 TOPK_MODE = "deep_norm"
 
 # Train controls
-EPOCHS = 20
+EPOCHS = 8
 LR = 1e-3
 WEIGHT_DECAY = 1e-4
-HID = 128
+HID = 256
 DROPOUT = 0.1
 
 torch.manual_seed(SEED)
 np.random.seed(SEED)
 
-EXPERIMENTS = ["vision_pool", "vision_abmil", "vision_concept_gated"]
+# EXPERIMENTS = ["vision_pool", "vision_abmil", "vision_concept_gated"]
+EXPERIMENTS = [
+    "vision_abmil",
+    "concept_abmil",
+    "vision_concept_concat_abmil",
+    "vision_concept_gated",
+]
 # , "vision_pool", "vision_abmil"
 
 
@@ -112,6 +119,15 @@ def summarize_percent(df_metrics, cols=("auc","balacc","acc")):
         s = df_metrics[c].std(ddof=1) * 100.0
         out[c] = (round(m, 2), round(s, 2))
     return out
+
+import random
+
+def reset_seeds(seed=0):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 # LOAD CONCEPT SCORES (OPTIONAL, for later use in concept ablation) =====================
 df_patch = pd.read_csv(PATCH_CONCEPT_CSV)
@@ -400,8 +416,8 @@ def train_one_fold(model, dl_tr, dl_val, dl_te, mode: str):
     loss_fn = nn.BCEWithLogitsLoss()
 
     best_state = None
-    # best_val_balacc = -np.inf
-    best_val_auc = -np.inf
+    best_val_balacc = -np.inf
+    # best_val_auc = -np.inf
 
     for ep in range(EPOCHS):
         # ---------------- train ----------------
@@ -427,7 +443,22 @@ def train_one_fold(model, dl_tr, dl_val, dl_te, mode: str):
                 Xc = Xc.to(DEVICE)
                 y = y.float().to(DEVICE)
                 logit, _ = model(Xd, Xc)
+            
+            # NEW ablations ===============
+            elif mode == "concept_abmil":
+                (Xd, Xc, y, sid) = item
+                Xc = Xc.to(DEVICE)
+                y = y.float().to(DEVICE)
+                logit, _ = model(Xc)
 
+            elif mode == "vision_concept_concat_abmil":
+                (Xd, Xc, y, sid) = item
+                Xd = Xd.to(DEVICE)
+                Xc = Xc.to(DEVICE)
+                y = y.float().to(DEVICE)
+                X = torch.cat([Xd, Xc], dim=1)
+                logit, _ = model(X)
+            # NEW ablations ===============    
             else:
                 raise ValueError(f"Unknown mode: {mode}")
 
@@ -459,6 +490,21 @@ def train_one_fold(model, dl_tr, dl_val, dl_te, mode: str):
                     Xc = Xc.to(DEVICE)
                     logit, _ = model(Xd, Xc)
 
+                # NEW ablations ===============
+                elif mode == "concept_abmil":
+                    (Xd, Xc, y, sid) = item
+                    Xc = Xc.to(DEVICE)
+                    y = y.float().to(DEVICE)
+                    logit, _ = model(Xc)
+
+                elif mode == "vision_concept_concat_abmil":
+                    (Xd, Xc, y, sid) = item
+                    Xd = Xd.to(DEVICE)
+                    Xc = Xc.to(DEVICE)
+                    y = y.float().to(DEVICE)
+                    X = torch.cat([Xd, Xc], dim=1)
+                    logit, _ = model(X)
+                # NEW ablations ===============    
                 else:
                     raise ValueError(f"Unknown mode: {mode}")
 
@@ -468,13 +514,13 @@ def train_one_fold(model, dl_tr, dl_val, dl_te, mode: str):
 
         m_val = eval_metrics(np.array(y_true_val), np.array(y_prob_val), thr=0.5)
 
-        # if m_val["balacc"] > best_val_balacc:
-        #     best_val_balacc = m_val["balacc"]
-        #     best_state = copy.deepcopy(model.state_dict())
-        
-        if m_val["auc"] > best_val_auc:
-            best_val_auc = m_val["auc"]
+        if m_val["balacc"] > best_val_balacc:
+            best_val_balacc = m_val["balacc"]
             best_state = copy.deepcopy(model.state_dict())
+        
+        # if m_val["auc"] > best_val_auc:
+        #     best_val_auc = m_val["auc"]
+        #     best_state = copy.deepcopy(model.state_dict())
 
     # load best-val model
     if best_state is not None:
@@ -503,6 +549,22 @@ def train_one_fold(model, dl_tr, dl_val, dl_te, mode: str):
                 Xc = Xc.to(DEVICE)
                 logit, _ = model(Xd, Xc)
 
+            # NEW ablations ===============
+            elif mode == "concept_abmil":
+                (Xd, Xc, y, sid) = item
+                Xc = Xc.to(DEVICE)
+                y = y.float().to(DEVICE)
+                logit, _ = model(Xc)
+
+            elif mode == "vision_concept_concat_abmil":
+                (Xd, Xc, y, sid) = item
+                Xd = Xd.to(DEVICE)
+                Xc = Xc.to(DEVICE)
+                y = y.float().to(DEVICE)
+                X = torch.cat([Xd, Xc], dim=1)
+                logit, _ = model(X)
+            # NEW ablations ===============    
+
             else:
                 raise ValueError(f"Unknown mode: {mode}")
 
@@ -524,6 +586,10 @@ for mode in EXPERIMENTS:
 
     for fold_dir in fold_dirs:
         fold_name = os.path.basename(fold_dir)
+
+        fold_seed = SEED + hash((mode, fold_name)) % 10000 # set seed
+        reset_seeds(fold_seed) # set seed
+
         train_slides = read_slide_list(os.path.join(fold_dir, "train.csv"))
         val_slides   = read_slide_list(os.path.join(fold_dir, "val.csv"))
         test_slides  = read_slide_list(os.path.join(fold_dir, "test.csv"))
@@ -535,7 +601,8 @@ for mode in EXPERIMENTS:
             ds_val = VisionOnlyBagDataset(val_slides,   bag_cap=BAG_CAP, topk=TOPK, seed=SEED)
             ds_te  = VisionOnlyBagDataset(test_slides,  bag_cap=BAG_CAP, topk=TOPK, seed=SEED)
 
-        elif mode == "vision_concept_gated":
+        # elif mode == "vision_concept_gated":
+        elif mode in ["vision_concept_gated", "concept_abmil","vision_concept_concat_abmil"]:
             ds_tr  = VisionConceptBagDataset(df_patch, train_slides, concept_cols,
                                              bag_cap=BAG_CAP, topk=TOPK, seed=SEED)
             ds_val = VisionConceptBagDataset(df_patch, val_slides, concept_cols,
@@ -549,7 +616,10 @@ for mode in EXPERIMENTS:
             print(f"[{fold_name}] skipped (empty train/val/test after filtering)")
             continue
 
-        dl_tr  = DataLoader(ds_tr,  batch_size=1, shuffle=True,  collate_fn=collate_bag)
+        g = torch.Generator()
+        g.manual_seed(fold_seed)
+        
+        dl_tr  = DataLoader(ds_tr,  batch_size=1, shuffle=True,  collate_fn=collate_bag, generator=g)
         dl_val = DataLoader(ds_val, batch_size=1, shuffle=False, collate_fn=collate_bag)
         dl_te  = DataLoader(ds_te,  batch_size=1, shuffle=False, collate_fn=collate_bag)
 
@@ -588,6 +658,18 @@ for mode in EXPERIMENTS:
             Xd0, Xc0, _, _ = ds_tr[0]
             model = GatedAttentionMIL(deep_dim=Xd0.shape[1], concept_dim=Xc0.shape[1],
                                       hid=HID, drop=DROPOUT).to(DEVICE)
+        # NEW ablations===============
+        elif mode == "concept_abmil":
+            Xd0, Xc0, _, _ = ds_tr[0]
+            in_dim = Xc0.shape[1]
+            model = AttentionMIL(in_dim=in_dim, hid=HID, drop=DROPOUT).to(DEVICE)
+
+        elif mode == "vision_concept_concat_abmil":
+            Xd0, Xc0, _, _ = ds_tr[0]
+            in_dim = Xd0.shape[1] + Xc0.shape[1]
+            model = AttentionMIL(in_dim=in_dim, hid=HID, drop=DROPOUT).to(DEVICE)
+        # NEW ablations ===============
+
         else:
             raise ValueError(mode)
 

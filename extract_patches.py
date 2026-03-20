@@ -132,7 +132,8 @@ from load_slide_in_tiles import extract_patches, save_patches_as_numpy, load_sli
 # Parameters
 MAGNIFICATION = 20 # max magnification 
 METADATA_DIR = "metadata/filtered_slides" # directory to metadata csv files
-OUTPUT_ROOT = f"patches_tiled/patches_10x/{MAGNIFICATION}x" # output directory for patches
+# OUTPUT_ROOT = f"patches_tiled/patches_10x/{MAGNIFICATION}x" # output directory for patches
+OUTPUT_ROOT = f"patches_tiled_new/patches_10x/{MAGNIFICATION}x" # regenerating without gaps
 SLIDE_ROOT = r"Z:\\mirage\\med-i_data\\Data\\Amoon\\Pathology Raw" # directory to vsi slides
 
 metadata_files = {

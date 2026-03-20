@@ -278,7 +278,7 @@ def main():
     # offset_y_um = 0
 
     # Load image
-    # image = load_vsi_image(vsi_path, series=series)
+    image = load_vsi_image(vsi_path, series=series)
     # image = load_slide_in_tiles(vsi_path, tile_size=tile_size, series=series)
 
     # # Parse annotations
@@ -303,8 +303,8 @@ def main():
 
     # --- Visualize ---
     # visualize_annotations(image, annotations)
-    # visualize_annotations(image, annotations_shifted)
-    visualize_annotations(reconstructed_image, annotations_shifted)
+    visualize_annotations(image, annotations_shifted)
+    # visualize_annotations(reconstructed_image, annotations_shifted)
 
 
     # ----------------------------------------------------------------

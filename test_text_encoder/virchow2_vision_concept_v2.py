@@ -18,6 +18,8 @@ import h5py
 # -----------------
 # configs for concept guided attn
 PATCH_CONCEPT_CSV = r"C:\Users\Vivian\Documents\CONCH\test_text_encoder\slide_concept_scores\noCAP_patch_ptfile_notopk_conf_PATCH.csv"
+# PATCH_CONCEPT_CSV = r"C:\Users\Vivian\Documents\CONCH\test_text_encoder\V3_concept_prior\V3_top3_concept_prior_PATCH.csv"
+
 SLIDE_COL = "slide_id"
 LABEL_COL = "true_label_str"
 X_COL, Y_COL = "x", "y"
@@ -29,12 +31,13 @@ CV_ROOT = r"C:/Users/Vivian/Documents/PANTHER/PANTHER/src/splits/cross-val"
 # If you have one file per slide named "<slide_id>.pt" or "<slide_id>.h5"
 FEAT_BACKEND = "pt"   # "pt" or "h5"
 
-# PT_FEAT_DIR = r"C:\Users\Vivian\Documents\CONCH\virchow2_img_feats\10x_feats\40x\pt"   # e.g. ...\virchow2\feats_pt
+PT_FEAT_DIR = r"C:\Users\Vivian\Documents\CONCH\virchow2_img_feats\10x_feats\40x\pt"   # e.g. ...\virchow2\feats_pt
 # PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\conch_img_feats\10x_feats\conchextracted_mag10x_patch224_fp\feats_pt' # CONCH 10x pt features
-PT_FEAT_DIR = r"C:\Users\Vivian\Documents\CONCH\conch_img_feats\10x_unnorm_feats\20x\pt"        # CONCH unnorm
-# PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\uni2h_img_feats\pt'       # UNI 10x pt features
+# PT_FEAT_DIR = r"C:\Users\Vivian\Documents\CONCH\conch_img_feats\10x_unnorm_feats\20x\pt"        # CONCH unnorm
+# PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\uni2h_img_feats\pt'       # UNI2 10x pt features
 # PT_FEAT_DIR = r"C:\Users\Vivian\Documents\CONCH\run2_conch15_img_feats\pt"       # conchv1.5 pt features
 # H5_FEAT_DIR = r"C:\Users\Vivian\Documents\CLAM\CLAM\FEATURES_DIR_5x\FEATURES_DIR_10x\uniextracted_mag10x_patch224_fp\feats_h5"        # UNI
+# H5_FEAT_DIR = r'C:\Users\Vivian\Documents\CLAM\CLAM\FEATURES_DIR_5x\spider_run2\feats_h5' #SPIDER h5 feats
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 SEED = 0
