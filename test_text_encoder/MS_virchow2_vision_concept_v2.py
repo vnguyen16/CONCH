@@ -36,18 +36,18 @@ warnings.filterwarnings(
 # configs for concept guided attn
 # PATCH_CONCEPT_CSV = r"C:\Users\Vivian\Documents\CONCH\test_text_encoder\slide_concept_scores\noCAP_patch_ptfile_notopk_conf_PATCH.csv" # 10x og 
 # PATCH_CONCEPT_CSV = r'C:\Users\Vivian\Documents\CONCH\test_text_encoder\slide_concept_scores\2.5x\noCAP_patch_ptfile_notopk_conf_PATCH.csv' # 2.5x og
-# PATCH_CONCEPT_CSV = r'C:\Users\Vivian\Documents\CONCH\test_text_encoder\slide_concept_scores\5x\noCAP_patch_ptfile_notopk_conf_PATCH.csv' # 5x og
+PATCH_CONCEPT_CSV = r'C:\Users\Vivian\Documents\CONCH\test_text_encoder\slide_concept_scores\5x\noCAP_patch_ptfile_notopk_conf_PATCH.csv' # 5x og
 # PATCH_CONCEPT_CSV = r"C:\Users\Vivian\Documents\CONCH\test_text_encoder\V3_concept_prior\V3_top3_concept_prior_PATCH.csv" # top3/avg variants
 # PATCH_CONCEPT_CSV = r"C:\Users\Vivian\Documents\CONCH\test_text_encoder\V3_concept_prior\separate_variants_10x\V3_concept_prior_PATCH_VARIANTS.csv" # 10x expanded variants
 
 # PATCH_CONCEPT_CSV = r"C:\Users\Vivian\Documents\CONCH\test_text_encoder\V3_concept_prior\separate_variants_25x\V3_concept_prior_PATCH_VARIANTS.csv" # 2.5x expanded variants    
-PATCH_CONCEPT_CSV = r'C:\Users\Vivian\Documents\CONCH\test_text_encoder\V3_concept_prior\separate_variants_5x\V3_concept_prior_PATCH_VARIANTS.csv' # 5x expanded variants
+# PATCH_CONCEPT_CSV = r'C:\Users\Vivian\Documents\CONCH\test_text_encoder\V3_concept_prior\separate_variants_5x\V3_concept_prior_PATCH_VARIANTS.csv' # 5x expanded variants
 
 SLIDE_COL = "slide_id"
 LABEL_COL = "true_label_str"
 X_COL, Y_COL = "x", "y"
-# CONCEPT_PREFIX = "concept_" # og
-CONCEPT_PREFIX = "variant_" # for your new concept prior csv with separate variants instead of topk
+CONCEPT_PREFIX = "concept_" # og
+# CONCEPT_PREFIX = "variant_" # for your new concept prior csv with separate variants instead of topk
 # -----------------------------
 CV_ROOT = r"C:/Users/Vivian/Documents/PANTHER/PANTHER/src/splits/cross-val"
 
@@ -65,8 +65,8 @@ FEAT_BACKEND = "pt"   # "pt" or "h5"
 
 # PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\conch_img_feats\2.5x_feats\40x\pt' # CONCH 2.5x
 # PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\conch_img_feats\25x_unnorm_feats\20x\pt' # CONCH 2.5x unnorm
-PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\conch_img_feats\5x_feats\40x\pt' # CONCH 5x
-# PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\conch_img_feats\5x_unnorm_feats\20x\pt' # CONCH 5x unnorm
+# PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\conch_img_feats\5x_feats\40x\pt' # CONCH 5x
+PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\conch_img_feats\5x_unnorm_feats\20x\pt' # CONCH 5x unnorm
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 SEED = 0
