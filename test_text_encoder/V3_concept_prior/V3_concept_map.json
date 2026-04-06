@@ -1,0 +1,376 @@
+{
+    "templates": [
+        "breast histopathology image of {}",
+        "H&E stained breast tissue showing {}",
+        "breast core biopsy with features of {}",
+        "microscopy of breast lesion consistent with {}"
+    ],
+
+    "classes": {
+        "FA": [
+            "fibroadenoma",
+            "fibroadenoma of the breast",
+            "benign fibroepithelial lesion (fibroadenoma)"
+        ],
+        "PT": [
+            "phyllodes tumor",
+            "phyllodes tumour",
+            "fibroepithelial lesion consistent with phyllodes tumor"
+        ]
+    },
+
+    "concepts": {
+        "FA_lean": {
+            "bland_fibrous_stroma": [
+                "bland fibrous stroma",
+                "hypocellular fibrous stroma",
+                "uniform fibrous stroma",
+                "benign fibrous stroma with low cellularity",
+                "breast histopathology image of bland fibrous stroma"
+            ],
+            "low_stromal_cellularity": [
+                "low stromal cellularity",
+                "hypocellular stroma",
+                "scant stromal cellularity",
+                "stroma with low cellular density",
+                "H&E stained breast tissue showing low stromal cellularity"
+            ],
+            "uniform_stromal_nuclei": [
+                "uniform stromal nuclei",
+                "monotonous stromal nuclei",
+                "cytologically bland stromal nuclei",
+                "stromal nuclei with minimal pleomorphism",
+                "breast histopathology image showing uniform stromal nuclei"
+            ],
+            "inconspicuous_nucleoli": [
+                "inconspicuous nucleoli in stromal cells",
+                "stromal cells with inconspicuous nucleoli",
+                "small inconspicuous nucleoli in stromal cells",
+                "bland stromal cells with inconspicuous nucleoli",
+                "microscopy of breast lesion showing inconspicuous stromal nucleoli"
+            ],
+            "balanced_glands_and_stroma": [
+                "balanced glands and stroma",
+                "balanced epithelial and stromal components",
+                "proportionate glands and stroma",
+                "well-balanced fibroepithelial architecture",
+                "breast core biopsy with balanced glands and stroma"
+            ],
+            "benign_ducts_in_fibrous_stroma": [
+                "benign breast ducts within fibrous stroma",
+                "benign ducts embedded in fibrous stroma",
+                "benign glandular elements within fibrous stroma",
+                "non-atypical ducts surrounded by fibrous stroma",
+                "breast histopathology image of benign ducts within fibrous stroma"
+            ],
+            "pericanalicular_pattern": [
+                "pericanalicular pattern",
+                "pericanalicular fibroadenoma pattern",
+                "round to oval ducts surrounded by stroma",
+                "stroma encircling open ducts in a pericanalicular pattern",
+                "breast histopathology image showing pericanalicular pattern"
+            ],
+            "intracanalicular_pattern": [
+                "intracanalicular pattern",
+                "intracanalicular fibroadenoma pattern",
+                "compressed slit-like ducts due to stromal proliferation",
+                "stromal compression of ducts in an intracanalicular pattern",
+                "breast histopathology image showing intracanalicular pattern"
+            ],
+            "multinucleated_stromal_giant_cells": [
+                "multinucleated stromal giant cells",
+                "stromal giant cells",
+                "multinucleated giant stromal cells",
+                "scattered multinucleated cells in stroma",
+                "breast histopathology image showing multinucleated stromal giant cells"
+            ],
+            "mild_fragmentation_low_cellularity": [
+                "mild fragmentation with low cellularity",
+                "fragmented specimen with hypocellular stroma",
+                "mildly fragmented low-cellularity stromal tissue",
+                "fragmented bland stromal tissue",
+                "microscopy of breast lesion with mild fragmentation and low stromal cellularity"
+            ],
+            "edematous_stroma": [
+                "edematous stroma",
+                "stromal edema",
+                "loose edematous stromal tissue",
+                "expanded stroma with edema",
+                "breast histopathology image showing edematous stroma"
+            ],
+            "myxoid_stroma": [
+                "myxoid stroma",
+                "myxoid stromal matrix",
+                "loose myxoid stromal tissue",
+                "myxoid change in stroma",
+                "breast histopathology image showing myxoid stroma"
+            ],
+            "smooth_muscle_metaplasia": [
+                "smooth muscle stromal metaplasia",
+                "stromal smooth muscle metaplasia",
+                "smooth muscle differentiation in stroma",
+                "metaplastic smooth muscle in fibroepithelial stroma",
+                "breast histopathology image showing smooth muscle stromal metaplasia"
+            ]
+        },
+
+        "PT_lean": {
+            "stromal_hypercellularity": [
+                "stromal hypercellularity",
+                "hypercellular stroma",
+                "increased stromal cellularity",
+                "dense stromal cellularity",
+                "breast histopathology image of stromal hypercellularity"
+            ],
+            "periepithelial_stromal_condensation": [
+                "periepithelial stromal condensation",
+                "stromal condensation around ducts",
+                "subepithelial stromal condensation",
+                "stromal cuffing around epithelial ducts",
+                "breast histopathology image showing periepithelial stromal condensation"
+            ],
+            "stromal_atypia": [
+                "stromal cell atypia",
+                "atypical stromal nuclei",
+                "stromal nuclear atypia",
+                "stromal nuclear pleomorphism",
+                "breast histopathology image showing stromal atypia"
+            ],
+            "stromal_hyperchromasia": [
+                "stromal nuclear hyperchromasia",
+                "hyperchromatic stromal nuclei",
+                "darkly staining stromal nuclei",
+                "stromal cells with hyperchromatic nuclei",
+                "H&E stained breast tissue showing stromal nuclear hyperchromasia"
+            ],
+            "irregular_nuclear_membranes": [
+                "irregular nuclear membranes in stromal cells",
+                "stromal nuclei with irregular contours",
+                "irregular nuclear outlines in stromal cells",
+                "angulated stromal nuclear membranes",
+                "breast histopathology image showing irregular stromal nuclear membranes"
+            ],
+            "prominent_nucleoli": [
+                "prominent nucleoli in stromal cells",
+                "stromal cells with prominent nucleoli",
+                "conspicuous nucleoli in stromal nuclei",
+                "enlarged nucleoli in stromal cells",
+                "breast histopathology image showing prominent stromal nucleoli"
+            ],
+            "leaf_like_architecture": [
+                "leaf-like architecture",
+                "leaf-like stromal projections",
+                "phyllodes-like leaf architecture",
+                "cleft-like spaces with stromal projections",
+                "breast histopathology image showing leaf-like stromal projections"
+            ],
+            "fragmented_hypercellular_specimen": [
+                "highly fragmented hypercellular specimen with epithelium at the ends",
+                "fragmented hypercellular stromal tissue with epithelial-lined edges",
+                "hypercellular stromal fragments with epithelium at fragment borders",
+                "fragmented fibroepithelial tissue with hypercellular stroma",
+                "microscopy of breast lesion showing fragmented hypercellular stromal tissue"
+            ],
+            "intralesional_heterogeneity": [
+                "intralesional heterogeneity in fibroepithelial lesion",
+                "heterogeneous stromal architecture",
+                "lesional heterogeneity within fibroepithelial tissue",
+                "variable stromal morphology within the lesion",
+                "breast histopathology image showing intralesional heterogeneity"
+            ],
+            "infiltrative_border": [
+                "infiltrative or permeative lesion border",
+                "permeative lesion border",
+                "infiltrative stromal border",
+                "irregular infiltrative interface at lesion edge",
+                "breast histopathology image showing infiltrative lesion border"
+            ],
+            "entrapped_fat": [
+                "entrapped fat cells at lesion border",
+                "fat entrapment at the lesion edge",
+                "adipose tissue entrapped by lesion border",
+                "stromal lesion infiltrating into surrounding fat",
+                "breast histopathology image showing entrapped fat cells at lesion border"
+            ]
+        },
+
+        "PT_benign_like": {
+            "mild_stromal_hypercellularity": [
+                "mild stromal hypercellularity",
+                "mildly increased stromal cellularity",
+                "slightly hypercellular stroma",
+                "focal mild stromal hypercellularity",
+                "breast histopathology image showing mild stromal hypercellularity"
+            ],
+            "mild_stromal_atypia": [
+                "mild stromal cell atypia",
+                "mild stromal nuclear atypia",
+                "slight atypia in stromal cells",
+                "mild pleomorphism in stromal nuclei",
+                "breast histopathology image showing mild stromal atypia"
+            ],
+            "early_leaf_like_architecture": [
+                "early leaf-like architecture",
+                "focal leaf-like stromal projections",
+                "incipient leaf-like architecture",
+                "subtle leaf-like pattern",
+                "breast histopathology image showing early leaf-like architecture"
+            ],
+            "benign_like_periepithelial_condensation": [
+                "periepithelial stromal condensation",
+                "mild periepithelial stromal condensation",
+                "stromal condensation around benign ducts",
+                "subepithelial stromal cuffing",
+                "breast histopathology image showing mild periepithelial stromal condensation"
+            ]
+        },
+
+        "PT_borderline_like": {
+            "moderate_stromal_hypercellularity": [
+                "moderate stromal hypercellularity",
+                "moderately increased stromal cellularity",
+                "moderately hypercellular stroma",
+                "intermediate stromal hypercellularity",
+                "breast histopathology image showing moderate stromal hypercellularity"
+            ],
+            "moderate_stromal_atypia": [
+                "moderate stromal cell atypia",
+                "moderate stromal nuclear atypia",
+                "intermediate stromal pleomorphism",
+                "moderately atypical stromal nuclei",
+                "breast histopathology image showing moderate stromal atypia"
+            ],
+            "borderline_mitotic_activity": [
+                "three or more mitoses per ten high power fields",
+                "borderline mitotic activity in stroma",
+                "increased stromal mitotic count",
+                "frequent mitoses in hypercellular stroma",
+                "breast histopathology image showing increased stromal mitotic activity"
+            ],
+            "fragmented_hypercellular_stroma": [
+                "fragmented hypercellular stromal tissue",
+                "fragmented specimen with hypercellular stroma",
+                "hypercellular stromal fragments",
+                "fragmented fibroepithelial tissue with increased stromal cellularity",
+                "microscopy of breast lesion showing fragmented hypercellular stroma"
+            ],
+            "heterogeneous_stromal_architecture": [
+                "heterogeneous stromal architecture",
+                "variable stromal cellularity and architecture",
+                "architectural heterogeneity in stromal component",
+                "mixed stromal patterns within lesion",
+                "breast histopathology image showing heterogeneous stromal architecture"
+            ]
+        },
+
+        "PT_malignant_like": {
+            "stromal_overgrowth": [
+                "stromal overgrowth with absent epithelium",
+                "stromal overgrowth",
+                "sheets of stroma without glandular elements",
+                "stromal proliferation lacking epithelial components",
+                "breast histopathology image showing stromal overgrowth"
+            ],
+            "marked_stromal_atypia": [
+                "marked stromal cell atypia",
+                "marked stromal nuclear atypia",
+                "severe stromal pleomorphism",
+                "high-grade atypia in stromal cells",
+                "breast histopathology image showing marked stromal atypia"
+            ],
+            "high_mitotic_activity": [
+                "five or more mitoses per ten high power fields",
+                "high stromal mitotic activity",
+                "numerous mitotic figures in stromal cells",
+                "brisk stromal mitotic activity",
+                "breast histopathology image showing high stromal mitotic activity"
+            ],
+            "tumor_necrosis": [
+                "tumor necrosis with karyorrhexis",
+                "stromal necrosis",
+                "necrosis within hypercellular stroma",
+                "tumor necrosis in malignant phyllodes-like stroma",
+                "breast histopathology image showing tumor necrosis with karyorrhexis"
+            ]
+        },
+
+        "mitosis": {
+            "stromal_mitosis": [
+                "stromal mitotic figures",
+                "mitotic figures in stromal cells",
+                "stromal mitotic activity",
+                "mitotic hotspot in hypercellular stroma",
+                "breast histopathology image showing stromal mitoses"
+            ]
+        },
+
+        "NORMAL_lean": {
+            "normal_breast_lobules": [
+                "normal breast lobules",
+                "benign breast lobules",
+                "non-neoplastic breast lobules",
+                "normal terminal duct lobular units",
+                "breast histopathology image showing normal breast lobules"
+            ],
+            "benign_ducts_and_adipose": [
+                "benign ducts and adipose tissue",
+                "normal ducts within adipose tissue",
+                "benign breast ducts with surrounding fat",
+                "non-neoplastic ducts and adipose tissue",
+                "breast histopathology image showing benign ducts and adipose tissue"
+            ],
+            "background_parenchyma": [
+                "background breast parenchyma",
+                "normal breast parenchyma",
+                "benign background breast tissue",
+                "non-lesional breast parenchyma",
+                "breast histopathology image showing background breast parenchyma"
+            ],
+            "non_neoplastic_stroma": [
+                "non-neoplastic breast stroma",
+                "benign breast stroma",
+                "uninvolved breast stroma",
+                "background stromal tissue of the breast",
+                "breast histopathology image showing non-neoplastic breast stroma"
+            ],
+            "fibroadipose_tissue": [
+                "fibroadipose tissue",
+                "benign fibroadipose tissue",
+                "fibrous and adipose breast tissue",
+                "background fibroadipose breast tissue",
+                "breast histopathology image showing fibroadipose tissue"
+            ],
+            "fat_lobules": [
+                "fat lobules",
+                "adipose lobules",
+                "mature adipose tissue",
+                "breast adipose tissue lobules",
+                "breast histopathology image showing fat lobules"
+            ]
+        },
+
+        "controls": {
+            "tissue_edge": [
+                "tissue section edge",
+                "histologic section edge artifact",
+                "tissue boundary artifact",
+                "edge of tissue section",
+                "microscopy image showing tissue section edge"
+            ],
+            "low_information_fibrous_tissue": [
+                "low-information fibrous tissue",
+                "pauci-cellular fibrous tissue",
+                "uninformative fibrous stroma",
+                "feature-poor fibrous tissue",
+                "breast histopathology image of low-information fibrous tissue"
+            ],
+            "out_of_focus": [
+                "out of focus histology",
+                "blurred histopathology image",
+                "out-of-focus tissue section",
+                "poorly focused microscopy image",
+                "breast histopathology image that is out of focus"
+            ]
+        }
+    }
+}
