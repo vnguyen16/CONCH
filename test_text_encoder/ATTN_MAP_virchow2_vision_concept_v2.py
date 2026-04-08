@@ -1,5 +1,5 @@
 # ============================================================
-# VIRCHOW2 VISION-ONLY: vision_pool + vision_abmil
+# Save attention weights for heatmap visualization and multi-scale fusion
 # - Uses .pt OR .h5 features (set FEAT_BACKEND)
 # - Runs 5-fold CV from your existing split folders
 # ============================================================
@@ -19,24 +19,16 @@ warnings.filterwarnings(
     message=".*weights_only=False.*"
 )
 
-# FIXED SEEDS----------------------
-# torch.backends.cudnn.deterministic = True
-# torch.backends.cudnn.benchmark = False
-
-# MODE_SEEDS = {
-#     "vision_pool": 100,
-#     "vision_abmil": 200,
-#     "vision_concept_gated": 300,
-# }
-# FIXED SEEDS-----------------------
-
 # -----------------
 # PATHS (EDIT THESE)
 # -----------------
+# out dir for attn weights 
+OUT_DIR = r"C:\Users\Vivian\Documents\CONCH\test_text_encoder\attn_npz\10x"
+
 # configs for concept guided attn
-# PATCH_CONCEPT_CSV = r"C:\Users\Vivian\Documents\CONCH\test_text_encoder\slide_concept_scores\noCAP_patch_ptfile_notopk_conf_PATCH.csv" # 10x og 
+PATCH_CONCEPT_CSV = r"C:\Users\Vivian\Documents\CONCH\test_text_encoder\slide_concept_scores\noCAP_patch_ptfile_notopk_conf_PATCH.csv" # 10x og 
 # PATCH_CONCEPT_CSV = r'C:\Users\Vivian\Documents\CONCH\test_text_encoder\slide_concept_scores\2.5x\noCAP_patch_ptfile_notopk_conf_PATCH.csv' # 2.5x og
-PATCH_CONCEPT_CSV = r'C:\Users\Vivian\Documents\CONCH\test_text_encoder\slide_concept_scores\5x\noCAP_patch_ptfile_notopk_conf_PATCH.csv' # 5x og
+# PATCH_CONCEPT_CSV = r'C:\Users\Vivian\Documents\CONCH\test_text_encoder\slide_concept_scores\5x\noCAP_patch_ptfile_notopk_conf_PATCH.csv' # 5x og
 # PATCH_CONCEPT_CSV = r"C:\Users\Vivian\Documents\CONCH\test_text_encoder\V3_concept_prior\V3_top3_concept_prior_PATCH.csv" # top3/avg variants
 # PATCH_CONCEPT_CSV = r"C:\Users\Vivian\Documents\CONCH\test_text_encoder\V3_concept_prior\separate_variants_10x\V3_concept_prior_PATCH_VARIANTS.csv" # 10x expanded variants
 
@@ -57,7 +49,7 @@ FEAT_BACKEND = "pt"   # "pt" or "h5"
 
 # PT_FEAT_DIR = r"C:\Users\Vivian\Documents\CONCH\virchow2_img_feats\10x_feats\40x\pt"   # e.g. ...\virchow2\feats_pt
 # PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\conch_img_feats\10x_feats\conchextracted_mag10x_patch224_fp\feats_pt' # CONCH 10x pt features
-# PT_FEAT_DIR = r"C:\Users\Vivian\Documents\CONCH\conch_img_feats\10x_unnorm_feats\20x\pt"        # CONCH unnorm
+PT_FEAT_DIR = r"C:\Users\Vivian\Documents\CONCH\conch_img_feats\10x_unnorm_feats\20x\pt"        # CONCH unnorm
 # PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\uni2h_img_feats\pt'       # UNI2 10x pt features
 # PT_FEAT_DIR = r"C:\Users\Vivian\Documents\CONCH\run2_conch15_img_feats\pt"       # conchv1.5 pt features
 # H5_FEAT_DIR = r"C:\Users\Vivian\Documents\CLAM\CLAM\FEATURES_DIR_5x\FEATURES_DIR_10x\uniextracted_mag10x_patch224_fp\feats_h5"        # UNI
@@ -66,7 +58,7 @@ FEAT_BACKEND = "pt"   # "pt" or "h5"
 # PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\conch_img_feats\2.5x_feats\40x\pt' # CONCH 2.5x
 # PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\conch_img_feats\25x_unnorm_feats\20x\pt' # CONCH 2.5x unnorm
 # PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\conch_img_feats\5x_feats\40x\pt' # CONCH 5x
-PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\conch_img_feats\5x_unnorm_feats\20x\pt' # CONCH 5x unnorm
+# PT_FEAT_DIR = r'C:\Users\Vivian\Documents\CONCH\conch_img_feats\5x_unnorm_feats\20x\pt' # CONCH 5x unnorm
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 SEED = 0
@@ -201,7 +193,7 @@ df_patch[concept_cols] = df_patch[concept_cols].replace([np.inf, -np.inf], np.na
 
 lab = df_patch.groupby(SLIDE_COL)[LABEL_COL].first()
 y_map_global = {sid: int(labels_to_int([lab.loc[sid]])[0]) for sid in lab.index.tolist()}
-# ============================================================
+
 # ============================================================
 # DEEP FEATURE LOADER (NO CONCEPTS)
 # ============================================================
@@ -314,7 +306,8 @@ class VisionOnlyBagDataset(Dataset):
         keep = []
         for sid in slide_ids:
             try:
-                _ = load_slide_deep(sid)
+                # _ = load_slide_deep(sid)
+                _ = load_slide_deep_with_coords(sid) # save attn heatmaps
                 keep.append(sid)
             except Exception:
                 pass
@@ -324,22 +317,25 @@ class VisionOnlyBagDataset(Dataset):
 
     def __getitem__(self, idx):
         sid = self.slide_ids[idx]
-        X = load_slide_deep(sid)  # (N,D)
+        # X = load_slide_deep(sid)  # (N,D)
+        X, coords = load_slide_deep_with_coords(sid) # save attn heatmaps
         N = X.shape[0]
 
         # cap
         if self.bag_cap is not None and N > self.bag_cap:
             sel = self.rng.choice(N, size=self.bag_cap, replace=False)
             X = X[sel]
+            coords = coords[sel]
 
         # topk by deep norm
         if self.topk is not None and X.shape[0] > self.topk:
             score = np.linalg.norm(X, axis=1)
             keep = np.argsort(-score)[: self.topk]
             X = X[keep]
+            coords = coords[keep]
 
         y = label_from_slide_id(sid)
-        return torch.from_numpy(X), torch.tensor(y, dtype=torch.long), sid
+        return (torch.from_numpy(X), torch.tensor(y, dtype=torch.long), sid,torch.from_numpy(coords).int(),) 
 
 
 def collate_bag(batch):
@@ -388,16 +384,19 @@ class VisionConceptBagDataset(Dataset):
         # optional cap
         if self.bag_cap is not None and Xd.shape[0] > self.bag_cap:
             sel = self.rng.choice(Xd.shape[0], size=self.bag_cap, replace=False)
-            Xd = Xd[sel]; Xc = Xc[sel]
+            # Xd = Xd[sel]; Xc = Xc[sel]
+            Xd = Xd[sel]; Xc = Xc[sel]; coords = coords[sel]
 
         # optional topk by deep norm
         if self.topk is not None and Xd.shape[0] > self.topk:
             score = np.linalg.norm(Xd, axis=1)
             keep = np.argsort(-score)[: self.topk]
-            Xd = Xd[keep]; Xc = Xc[keep]
+            # Xd = Xd[keep]; Xc = Xc[keep]
+            Xd = Xd[keep]; Xc = Xc[keep]; coords = coords[keep]
 
         y = y_map_global[sid]
-        return torch.from_numpy(Xd), torch.from_numpy(Xc), torch.tensor(y, dtype=torch.long), sid
+        return (torch.from_numpy(Xd), torch.from_numpy(Xc), torch.tensor(y, dtype=torch.long), sid,torch.from_numpy(coords).int(),   # added
+        )
     
 # ============================================================
 # MODELS
@@ -422,14 +421,20 @@ class AttentionMIL(nn.Module):
         self.phi = nn.Sequential(nn.Linear(in_dim, hid), nn.ReLU(), nn.Dropout(drop))
         self.attn = nn.Linear(hid, 1)
         self.cls = nn.Linear(hid, 1)
-    def forward(self, X):
+    def forward(self, X, return_details=False):
         H = self.phi(X)
         a = self.attn(H).squeeze(1)
         w = torch.softmax(a, dim=0)
         z = (w.unsqueeze(1) * H).sum(0)
         logit = self.cls(z).squeeze(0)
+
+        # save attn heatmap
+        if return_details:
+            return logit, {"attn_final": w, "attn_logits": a}
+        
         return logit, w
 
+# gated attn class with attn heatmap weights 
 class GatedAttentionMIL(nn.Module):
     def __init__(self, deep_dim, concept_dim, hid=128, drop=0.1):
         super().__init__()
@@ -439,114 +444,74 @@ class GatedAttentionMIL(nn.Module):
         self.attn_c = nn.Linear(hid, 1)
         self.cls = nn.Linear(hid, 1)
 
-        # NEW - learnable alpha to weight deep vs concept attention
+        # set one of these in your experiments
         # self.alpha = nn.Parameter(torch.tensor(0.0))
-
-        # NEW fixed alpha
         # self.alpha = 1.0
 
-
-    def forward(self, Xd, Xc):
+    def forward(self, Xd, Xc, return_details=False):
         Hd = self.phi_d(Xd)
         Hc = self.phi_c(Xc)
-        a = self.attn_d(Hd).squeeze(1) + self.attn_c(Hc).squeeze(1) # og 
 
-        # NEW - gated attention with learnable alpha
+        a_d = self.attn_d(Hd).squeeze(1)
+        a_c = self.attn_c(Hc).squeeze(1)
+
+        # choose the version you are actually using:
+        a = a_d + a_c
         # alpha = torch.sigmoid(self.alpha)
-        # a = alpha * self.attn_d(Hd).squeeze(1) + (1 - alpha) * self.attn_c(Hc).squeeze(1)
-        # --------------------------------------
-
-        # NEW - fixed alpha
-        # a = self.alpha * self.attn_d(Hd).squeeze(1) + (1 - self.alpha) * self.attn_c(Hc).squeeze(1)
+        # a = alpha * a_d + (1 - alpha) * a_c
+        # a = self.alpha * a_d + (1 - self.alpha) * a_c
 
         w = torch.softmax(a, dim=0)
         z = (w.unsqueeze(1) * Hd).sum(0)
         logit = self.cls(z).squeeze(0)
-        return logit, w
-    
+
+        if return_details:
+            return logit, {
+                "attn_final": w,
+                "attn_vision": a_d,
+                "attn_concept": a_c,
+                "attn_logits": a,
+            }
+        return logit, w    
 # ============================================================
 # TRAIN/EVAL
 # ============================================================
 
+# -----------------------------------------
+#  save attn heatmap train one fold
 # def train_one_fold(model, dl_tr, dl_te, mode: str):
-#     opt = torch.optim.AdamW(model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY)
-#     loss_fn = nn.BCEWithLogitsLoss()
+def train_one_fold(model, dl_tr, dl_te, mode: str, fold_name: str):
+    out_dir = os.path.join(OUT_DIR, mode, fold_name)
+    os.makedirs(out_dir, exist_ok=True)
 
-#     model.train()
-#     for _ep in range(EPOCHS):
-#         for batch in dl_tr:
-#             (X, y, _sid) = batch[0]
-#             X = X.to(DEVICE)
-#             y = y.float().to(DEVICE)
-
-#             if mode == "vision_pool":
-#                 logit = model(X)
-#             elif mode == "vision_abmil":
-#                 logit, _ = model(X)
-#             elif mode == "vision_concept_gated":
-#                 (Xd, Xc, y, sid) = item
-#                 Xd = Xd.to(DEVICE); Xc = Xc.to(DEVICE); y = y.float().to(DEVICE)
-#                 logit, _ = model(Xd, Xc)
-#             else:
-#                 raise ValueError(mode)
-
-#             loss = loss_fn(logit.view(1), y.view(1))
-#             opt.zero_grad()
-#             loss.backward()
-#             opt.step()
-
-#     model.eval()
-#     y_true, y_prob = [], []
-#     with torch.no_grad():
-#         for batch in dl_te:
-#             (X, y, _sid) = batch[0]
-#             X = X.to(DEVICE)
-
-#             if mode == "vision_pool":
-#                 logit = model(X)
-#             elif mode == "vision_abmil":
-#                 logit, _ = model(X)
-#             elif mode == "vision_concept_gated":
-#                 (Xd, Xc, y, sid) = item
-#                 Xd = Xd.to(DEVICE); Xc = Xc.to(DEVICE); y = y.float().to(DEVICE)
-#                 logit, _ = model(Xd, Xc)
-#             else:
-#                 raise ValueError(mode)
-
-#             prob = torch.sigmoid(logit.detach().float().cpu()).item()
-#             y_true.append(int(y.item()))
-#             y_prob.append(prob)
-
-#     return eval_metrics(np.array(y_true), np.array(y_prob), thr=0.5)
-
-# NEW 
-def train_one_fold(model, dl_tr, dl_te, mode: str):
     opt = torch.optim.AdamW(model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY)
     loss_fn = nn.BCEWithLogitsLoss()
+
+    os.makedirs(OUT_DIR, exist_ok=True)
 
     # ---------------- train ----------------
     model.train()
     for ep in range(EPOCHS):
-        alpha_history = [] # NEW track learned alpha
         for batch in dl_tr:
-            item = batch[0]  # batch_size=1
+            item = batch[0]
 
             if mode == "vision_pool":
-                (Xd, y, sid) = item
-                Xd = Xd.to(DEVICE); y = y.float().to(DEVICE)
+                (Xd, y, sid, coords) = item
+                Xd = Xd.to(DEVICE)
+                y = y.float().to(DEVICE)
                 logit = model(Xd)
 
             elif mode == "vision_abmil":
-                (Xd, y, sid) = item
-                Xd = Xd.to(DEVICE); y = y.float().to(DEVICE)
+                (Xd, y, sid, coords) = item
+                Xd = Xd.to(DEVICE)
+                y = y.float().to(DEVICE)
                 logit, _ = model(Xd)
 
             elif mode == "vision_concept_gated":
-                # if your dataset returns 4 items:
-                (Xd, Xc, y, sid) = item
-                # if it returns 5 (with coords), use:
-                # (Xd, Xc, y, sid, coords) = item
-                Xd = Xd.to(DEVICE); Xc = Xc.to(DEVICE); y = y.float().to(DEVICE)
+                (Xd, Xc, y, sid, coords) = item
+                Xd = Xd.to(DEVICE)
+                Xc = Xc.to(DEVICE)
+                y = y.float().to(DEVICE)
                 logit, _ = model(Xd, Xc)
 
             else:
@@ -556,47 +521,91 @@ def train_one_fold(model, dl_tr, dl_te, mode: str):
             opt.zero_grad()
             loss.backward()
             opt.step()
-        
-        # ---- log alpha once per epoch ----
-        # if mode == "vision_concept_gated":
-        #     alpha_history.append(model.alpha.item())
 
     # ---------------- eval ----------------
     model.eval()
-    y_true, y_prob = [], []
+    rows = []
+
     with torch.no_grad():
         for batch in dl_te:
             item = batch[0]
 
             if mode == "vision_pool":
-                (Xd, y, sid) = item
+                (Xd, y, sid, coords) = item
                 Xd = Xd.to(DEVICE)
                 logit = model(Xd)
 
+                prob = torch.sigmoid(logit.detach().float().cpu()).item()
+                coords_np = coords.detach().cpu().numpy().astype(np.int32)
+
             elif mode == "vision_abmil":
-                (Xd, y, sid) = item
+                (Xd, y, sid, coords) = item
                 Xd = Xd.to(DEVICE)
-                logit, _ = model(Xd)
+                logit, details = model(Xd, return_details=True)
+
+                prob = torch.sigmoid(logit.detach().float().cpu()).item()
+                coords_np = coords.detach().cpu().numpy().astype(np.int32)
+                w_np = details["attn_final"].detach().cpu().numpy().astype(np.float32)
+                a_np = details["attn_logits"].detach().cpu().numpy().astype(np.float32)
+
+                np.savez_compressed(
+                    # os.path.join(OUT_DIR, f"{sid}_eval.npz"),
+                    os.path.join(out_dir, f"{sid}_eval.npz"),
+                    slide_id=np.array([sid]),
+                    y_true=np.array([int(y.item())], dtype=np.int32),
+                    p_pt=np.array([prob], dtype=np.float32),
+                    coords=coords_np,
+                    attn=w_np,
+                    attn_logits=a_np,
+                )
 
             elif mode == "vision_concept_gated":
-                (Xd, Xc, y, sid) = item
-                # or (Xd, Xc, y, sid, coords) if applicable
-                Xd = Xd.to(DEVICE); Xc = Xc.to(DEVICE)
-                logit, _ = model(Xd, Xc)
+                (Xd, Xc, y, sid, coords) = item
+                Xd = Xd.to(DEVICE)
+                Xc = Xc.to(DEVICE)
+                logit, details = model(Xd, Xc, return_details=True)
+
+                prob = torch.sigmoid(logit.detach().float().cpu()).item()
+                coords_np = coords.detach().cpu().numpy().astype(np.int32)
+                Xc_np = Xc.detach().cpu().numpy().astype(np.float32)
+
+                w_np = details["attn_final"].detach().cpu().numpy().astype(np.float32)
+                a_d_np = details["attn_vision"].detach().cpu().numpy().astype(np.float32)
+                a_c_np = details["attn_concept"].detach().cpu().numpy().astype(np.float32)
+                a_np = details["attn_logits"].detach().cpu().numpy().astype(np.float32)
+
+                concept_mean = Xc_np.mean(axis=0).astype(np.float32)
+                concept_attn_weighted = (w_np[:, None] * Xc_np).sum(axis=0).astype(np.float32)
+
+                np.savez_compressed(
+                    # os.path.join(OUT_DIR, f"{sid}_eval.npz"),
+                    os.path.join(out_dir, f"{sid}_eval.npz"),
+                    slide_id=np.array([sid]),
+                    y_true=np.array([int(y.item())], dtype=np.int32),
+                    p_pt=np.array([prob], dtype=np.float32),
+                    coords=coords_np,
+                    Xc=Xc_np,
+                    attn=w_np,
+                    attn_vision=a_d_np,
+                    attn_concept=a_c_np,
+                    attn_logits=a_np,
+                    concept_mean=concept_mean,
+                    concept_attn_weighted=concept_attn_weighted,
+                )
 
             else:
                 raise ValueError(f"Unknown mode: {mode}")
 
-            prob = torch.sigmoid(logit.detach().float().cpu()).item()
-            y_true.append(int(y.item()))
-            y_prob.append(prob)
+            rows.append({
+                "slide_id": sid,
+                "y_true": int(y.item()),
+                "p_pt": float(prob),
+                "n_patches": int(coords_np.shape[0]),
+            })
 
-    metrics = eval_metrics(np.array(y_true), np.array(y_prob), thr=0.5) # og
-    return metrics # og 
-    # return metrics, alpha_history # NEW return alpha history for gated attention
-# ============================================================
-# RUN CV
-# ============================================================
+    df_pred = pd.DataFrame(rows)
+    metrics = eval_metrics(df_pred["y_true"].values, df_pred["p_pt"].values, thr=0.5)
+    return metrics, df_pred
 
 # ============================================================
 # RUN CV
@@ -619,28 +628,10 @@ for mode in EXPERIMENTS:
         test_slides  = read_slide_list(os.path.join(fold_dir, "test.csv"))
         fit_slides = train_slides + val_slides
 
-        # SET FOLD SEED --------------
-        # # fold_seed = SEED + mode_idx * 100 + fold_idx
-        # fold_seed = SEED + MODE_SEEDS[mode] + fold_idx
-
-        # import random
-        # random.seed(fold_seed)
-        # np.random.seed(fold_seed)
-        # torch.manual_seed(fold_seed)
-        # if torch.cuda.is_available():
-        #     torch.cuda.manual_seed_all(fold_seed)
-        # SET FOLD SEED ----------------
-
         # -------- datasets per mode --------
         if mode in ["vision_pool", "vision_abmil"]:
             ds_tr = VisionOnlyBagDataset(fit_slides, bag_cap=BAG_CAP, topk=TOPK, seed=SEED)
             ds_te = VisionOnlyBagDataset(test_slides, bag_cap=BAG_CAP, topk=TOPK, seed=SEED)
-
-            # DEBUG: after creating ds_tr, ds_te
-            # print(f"{mode} | {fold_name} | n_train={len(ds_tr)} | n_test={len(ds_te)}")
-            # print("train sample:", ds_tr.slide_ids[:5])
-            # print("test sample:", ds_te.slide_ids[:5])
-            # DEBUG END
 
         elif mode == "vision_concept_gated":
             ds_tr = VisionConceptBagDataset(df_patch, fit_slides, concept_cols,
@@ -648,11 +639,6 @@ for mode in EXPERIMENTS:
             ds_te = VisionConceptBagDataset(df_patch, test_slides, concept_cols,
                                             bag_cap=BAG_CAP, topk=TOPK, seed=SEED)
             
-            # DEBUG: after creating ds_tr, ds_te
-            # print(f"{mode} | {fold_name} | n_train={len(ds_tr)} | n_test={len(ds_te)}")
-            # print("train sample:", ds_tr.slide_ids[:5])
-            # print("test sample:", ds_te.slide_ids[:5])
-            # DEBUG END
         else:
             raise ValueError(mode)
 
@@ -665,28 +651,29 @@ for mode in EXPERIMENTS:
 
         # -------- model init per mode --------
         if mode == "vision_pool":
-            X0, _, _ = ds_tr[0]
+            # X0, _, _ = ds_tr[0]
+            X0, _, _, _ = ds_tr[0]
             in_dim = X0.shape[1]
             model = PoolingClassifier(in_dim=in_dim, hid=HID, drop=DROPOUT).to(DEVICE)
 
         elif mode == "vision_abmil":
-            X0, _, _ = ds_tr[0]
+            # X0, _, _ = ds_tr[0]
+            X0, _, _, _ = ds_tr[0]
             in_dim = X0.shape[1]
             model = AttentionMIL(in_dim=in_dim, hid=HID, drop=DROPOUT).to(DEVICE)
 
         elif mode == "vision_concept_gated":
-            Xd0, Xc0, _, _ = ds_tr[0]
+            # Xd0, Xc0, _, _ = ds_tr[0]
+            Xd0, Xc0, _, _, _ = ds_tr[0]
             model = GatedAttentionMIL(deep_dim=Xd0.shape[1], concept_dim=Xc0.shape[1],
                                       hid=HID, drop=DROPOUT).to(DEVICE)
         else:
             raise ValueError(mode)
 
-        m = train_one_fold(model, dl_tr, dl_te, mode) # og
-        # m, alpha_history = train_one_fold(model, dl_tr, dl_te, mode) # unpacking alpha history for gated attention
+        # m = train_one_fold(model, dl_tr, dl_te, mode) # og
+        # m, df_pred = train_one_fold(model, dl_tr, dl_te, mode)
+        m, df_pred = train_one_fold(model, dl_tr, dl_te, mode, fold_name)
         
-        # logging alpha history for gated attention
-        # if mode == "vision_concept_gated":
-        #     all_alpha_histories.append(alpha_history)  # alpha history
         
         fold_metrics.append({"fold": fold_name, **m, "n_test": len(ds_te)})
         print(f"[{fold_name}] auc={m['auc']:.3f} balacc={m['balacc']:.3f} acc={m['acc']:.3f} (n_test={len(ds_te)})")
@@ -708,33 +695,3 @@ for mode in EXPERIMENTS:
 results_table = pd.DataFrame(all_rows)
 print("\n==================== FINAL SUMMARY TABLE ====================")
 print(results_table.to_string(index=False))
-
-# # ---------------- Alpha analysis ----------------
-# import matplotlib.pyplot as plt
-
-# if len(all_alpha_histories) > 0:
-#     alpha_array = np.array(all_alpha_histories)  # (n_folds, n_epochs)
-
-#     mean_alpha = alpha_array.mean(axis=0)
-#     std_alpha = alpha_array.std(axis=0)
-
-#     plt.figure()
-#     plt.plot(mean_alpha)
-#     plt.fill_between(
-#         range(len(mean_alpha)),
-#         mean_alpha - std_alpha,
-#         mean_alpha + std_alpha,
-#         alpha=0.2
-#     )
-#     plt.xlabel("Epoch")
-#     plt.ylabel("Alpha")
-#     plt.title("Alpha convergence (mean ± std across folds)")
-#     plt.show()
-
-#     final_alpha = alpha_array[:, -1]
-#     print(f"Final alpha: {final_alpha.mean():.3f} ± {final_alpha.std():.3f}")
-
-#     print("all_alpha_histories:", all_alpha_histories)
-#     alpha_array = np.array(all_alpha_histories)
-#     print("alpha_array shape:", alpha_array.shape)
-#     print("mean_alpha:", alpha_array.mean(axis=0))
